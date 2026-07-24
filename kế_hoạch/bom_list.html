@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bảng Kê Linh Kiện Xe IoT (BOM List)</title>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --panel: #1e293b;
+      --border: #334155;
+      --text: #f8fafc;
+      --text-muted: #94a3b8;
+      --primary: #38bdf8;
+      --accent-green: #4ade80;
+      --accent-yellow: #facc15;
+    }
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      margin: 0;
+      padding: 30px;
+      line-height: 1.5;
+    }
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    h1 {
+      color: var(--primary);
+      text-align: center;
+      margin-bottom: 25px;
+      font-size: 26px;
+    }
+    .summary-card {
+      background-color: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 30px;
+      display: flex;
+      justify-content: space-around;
+      flex-wrap: wrap;
+      gap: 15px;
+    }
+    .stat-item {
+      text-align: center;
+    }
+    .stat-title {
+      font-size: 14px;
+      color: var(--text-muted);
+      margin-bottom: 5px;
+    }
+    .stat-value {
+      font-size: 22px;
+      font-weight: bold;
+    }
+    .green { color: var(--accent-green); }
+    .yellow { color: var(--accent-yellow); }
+    .blue { color: var(--primary); }
+
+    h2 {
+      border-left: 4px solid var(--primary);
+      padding-left: 12px;
+      font-size: 18px;
+      margin-top: 35px;
+      margin-bottom: 15px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background-color: var(--panel);
+      border-radius: 8px;
+      overflow: hidden;
+      margin-bottom: 15px;
+      border: 1px solid var(--border);
+    }
+    th, td {
+      border: 1px solid var(--border);
+      padding: 12px 15px;
+      text-align: left;
+      font-size: 14px;
+    }
+    th {
+      background-color: #0f172a;
+      color: var(--primary);
+      font-weight: 600;
+      text-transform: uppercase;
+      font-size: 12px;
+      letter-spacing: 0.5px;
+    }
+    tr:hover {
+      background-color: #26334d;
+    }
+    .center { text-align: center; }
+    .right { text-align: right; }
+    .bold { font-weight: bold; }
+    code {
+      background: #090d16;
+      color: #38bdf8;
+      padding: 3px 8px;
+      border-radius: 4px;
+      font-family: monospace;
+    }
+    .badge-warning {
+      color: #fb7185;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>📋 BẢNG KÊ LINH KIỆN (BOM) - XE Ô TÔ IOT</h1>
+
+    <div class="summary-card">
+      <div class="stat-item">
+        <div class="stat-title">🟢 ĐÃ CÓ SẴN</div>
+        <div class="stat-value green">840.000 đ</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-title">🟡 CẦN MUA THÊM</div>
+        <div class="stat-value yellow">140.000 đ</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-title">💰 TỔNG HOÀN THIỆN</div>
+        <div class="stat-value blue">980.000 đ</div>
+      </div>
+    </div>
+
+    <h2>1. Linh kiện ĐÃ CÓ SẴN (Đã chuẩn bị)</h2>
+    <table>
+      <thead>
+        <tr>
+          <th style="width: 50px;" class="center">STT</th>
+          <th>Tên Linh Kiện</th>
+          <th style="width: 100px;" class="center">Số Lượng</th>
+          <th style="width: 120px;" class="right">Đơn Giá</th>
+          <th style="width: 120px;" class="right">Thành Tiền</th>
+          <th>Ghi Chú / Chức Năng</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="center bold">1</td>
+          <td>Tay điều khiển MC6C + Receiver MC7RB</td>
+          <td class="center">1 bộ</td>
+          <td class="right">550.000 đ</td>
+          <td class="right bold">550.000 đ</td>
+          <td>Tay phát RC vật lý & Bộ thu S.BUS</td>
+        </tr>
+        <tr>
+          <td class="center bold">2</td>
+          <td>Mạch vi điều khiển ESP32 DevKit V1</td>
+          <td class="center">1 mạch</td>
+          <td class="right">75.000 đ</td>
+          <td class="right bold">75.000 đ</td>
+          <td>Bộ não điều khiển trung tâm (WiFi/S.BUS)</td>
+        </tr>
+        <tr>
+          <td class="center bold">3</td>
+          <td>Mạch cầu H L298N</td>
+          <td class="center">1 mạch</td>
+          <td class="right">35.000 đ</td>
+          <td class="right bold">35.000 đ</td>
+          <td>Điều khiển tốc độ & chiều quay 4 động cơ</td>
+        </tr>
+        <tr>
+          <td class="center bold">4</td>
+          <td>Động cơ giảm tốc vàng + Bánh xe</td>
+          <td class="center">4 bộ</td>
+          <td class="right">20.000 đ</td>
+          <td class="right bold">80.000 đ</td>
+          <td>Động cơ truyền động lực cho 4 bánh</td>
+        </tr>
+        <tr>
+          <td class="center bold">5</td>
+          <td>Pin nguồn (Pin LiPo / 18650 2S)</td>
+          <td class="center">1 bộ</td>
+          <td class="right">100.000 đ</td>
+          <td class="right bold">100.000 đ</td>
+          <td>Cấp nguồn chính cho động cơ & hệ thống</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h2>2. Linh kiện CẦN MUA THÊM (Shopee)</h2>
+    <table>
+      <thead>
+        <tr>
+          <th style="width: 50px;" class="center">STT</th>
+          <th>Tên Linh Kiện</th>
+          <th style="width: 100px;" class="center">Số Lượng</th>
+          <th style="width: 120px;" class="right">Đơn Giá</th>
+          <th style="width: 120px;" class="right">Thành Tiền</th>
+          <th>Từ Khóa Shopee</th>
+          <th>Ghi Chú Quan Trọng</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="center bold">1</td>
+          <td>Khung xe Mica 4 bánh (4WD Chassis)</td>
+          <td class="center">1 bộ</td>
+          <td class="right">75.000 đ</td>
+          <td class="right bold">75.000 đ</td>
+          <td><code>Khung xe robot 4 bánh</code></td>
+          <td>Đế cố định động cơ, pin và bo mạch</td>
+        </tr>
+        <tr>
+          <td class="center bold">2</td>
+          <td>Cảm biến siêu âm HC-SR04P (3.3V)</td>
+          <td class="center">1 chiếc</td>
+          <td class="right">18.000 đ</td>
+          <td class="right bold">18.000 đ</td>
+          <td><code>HC-SR04P 3.3V</code></td>
+          <td><span class="badge-warning">⚠️ LƯU Ý PHẢI MUA BẢN P</span> (dùng điện 3.3V)</td>
+        </tr>
+        <tr>
+          <td class="center bold">3</td>
+          <td>Mạch hạ áp DC-DC LM2596</td>
+          <td class="center">1 mạch</td>
+          <td class="right">13.000 đ</td>
+          <td class="right bold">13.000 đ</td>
+          <td><code>Mạch giảm áp LM2596</code></td>
+          <td>Hạ áp pin xuống 5V nuôi ESP32 & Receiver</td>
+        </tr>
+        <tr>
+          <td class="center bold">4</td>
+          <td>Mạch cảm biến đo điện áp 0-25V</td>
+          <td class="center">1 mạch</td>
+          <td class="right">8.000 đ</td>
+          <td class="right bold">8.000 đ</td>
+          <td><code>Cảm biến điện áp 0-25V</code></td>
+          <td>Đo điện áp pin gửi telemetry lên Web</td>
+        </tr>
+        <tr>
+          <td class="center bold">5</td>
+          <td>Dây cắm Dupont Cái - Cái (Female-Female)</td>
+          <td class="center">1 vỉ</td>
+          <td class="right">7.000 đ</td>
+          <td class="right bold">7.000 đ</td>
+          <td><code>Dây bus dupont 20cm</code></td>
+          <td>Nối tín hiệu ESP32, Receiver & L298N</td>
+        </tr>
+        <tr>
+          <td class="center bold">6</td>
+          <td>Dây cắm Dupont Đực - Cái (Male-Female)</td>
+          <td class="center">1 vỉ</td>
+          <td class="right">7.000 đ</td>
+          <td class="right bold">7.000 đ</td>
+          <td><code>Dây bus dupont 20cm</code></td>
+          <td>Nối các module cảm biến</td>
+        </tr>
+        <tr>
+          <td class="center bold">7</td>
+          <td>Đầu kẹp điện thoại (Tripod mount)</td>
+          <td class="center">1 chiếc</td>
+          <td class="right">10.000 đ</td>
+          <td class="right bold">10.000 đ</td>
+          <td><code>Đầu kẹp điện thoại tripod</code></td>
+          <td>Kẹp điện thoại làm camera hành trình</td>
+        </tr>
+        <tr>
+          <td class="center bold">8</td>
+          <td>Công tắc bập bênh nhỏ ON/OFF</td>
+          <td class="center">1 chiếc</td>
+          <td class="right">2.000 đ</td>
+          <td class="right bold">2.000 đ</td>
+          <td><code>Công tắc bập bênh nhỏ</code></td>
+          <td>Đóng / ngắt nguồn pin tổng</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</body>
+</html>

@@ -1,0 +1,21 @@
+{
+  "name": "iot-car-backend",
+  "version": "1.0.0",
+  "description": "Node.js WebSocket Server for ESP32 IoT Car Control",
+  "type": "module",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "nodemon server.js",
+    "device": "node mock_device.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.21.2",
+    "socket.io": "^4.8.1",
+    "socket.io-client": "^4.8.1"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.9"
+  }
+}

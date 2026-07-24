@@ -1,0 +1,15 @@
+STT,Tên Linh Kiện,Số Lượng,Đơn Giá (đ),Thành Tiền (đ),Từ Khóa Shopee / Phân Loại,Ghi Chú
+1,Tay điều khiển MC6C + Receiver MC7RB,1 bộ,550000,550000,ĐÃ CÓ,Tay phát RC vật lý & Bộ thu S.BUS
+2,Mạch vi điều khiển ESP32 DevKit V1,1 mạch,75000,75000,ĐÃ CÓ,Bộ não điều khiển trung tâm (WiFi/S.BUS)
+3,Mạch cầu H L298N,1 mạch,35000,35000,ĐÃ CÓ,Điều khiển tốc độ & chiều quay 4 động cơ
+4,Động cơ giảm tốc vàng + Bánh xe,4 bộ,20000,80000,ĐÃ CÓ,Động cơ truyền động lực cho 4 bánh
+5,Pin nguồn (Pin LiPo / 18650 2S),1 bộ,100000,100000,ĐÃ CÓ,Cấp nguồn chính cho động cơ & hệ thống
+,,,,,,
+1,Khung xe Mica 4 bánh (4WD Chassis),1 bộ,75000,75000,Khung xe robot 4 bánh,Đế cố định động cơ pin và bo mạch
+2,Cảm biến siêu âm HC-SR04P (3.3V),1 chiếc,18000,18000,HC-SR04P 3.3V,LUU Y PHAI MUA BAN P (dung dien 3.3V)
+3,Mạch hạ áp DC-DC LM2596,1 mạch,13000,13000,Mạch giảm áp LM2596,Hạ áp pin xuống 5V nuôi ESP32 & Receiver
+4,Mạch cảm biến đo điện áp 0-25V,1 mạch,8000,8000,Cảm biến điện áp 0-25V,Đo điện áp pin gửi telemetry lên Web
+5,Dây cắm Dupont Cái - Cái (Female-Female),1 vỉ,7000,7000,Dây bus dupont 20cm,Nối tín hiệu ESP32 Receiver & L298N
+6,Dây cắm Dupont Đực - Cái (Male-Female),1 vỉ,7000,7000,Dây bus dupont 20cm,Nối các module cảm biến
+7,Đầu kẹp điện thoại (Tripod mount),1 chiếc,10000,10000,Đầu kẹp điện thoại tripod,Kẹp điện thoại làm camera hành trình
+8,Công tắc bập bênh nhỏ ON/OFF,1 chiếc,2000,2000,Công tắc bập bênh nhỏ,Đóng / ngắt nguồn pin tổng
