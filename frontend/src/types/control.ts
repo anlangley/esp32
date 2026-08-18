@@ -14,7 +14,6 @@ export interface ControlCommand {
   x: number; // X-axis value from -1.0 (left) to 1.0 (right)
   y: number; // Y-axis value from -1.0 (reverse) to 1.0 (forward)
   speedLimit: number; // Speed limit percentage (0 - 100)
-  camAngle?: number; // Camera servo angle from 0 to 180 degrees
 }
 
 export type ConnectionStatus = 'connected' | 'disconnected' | 'connecting';
@@ -23,7 +22,7 @@ export interface CameraConfig {
   ip: string;
   port: string;
   path: string; // e.g. '/video' or '/stream'
-  type: 'mjpeg' | 'webrtc';
+  type?: 'mjpeg' | 'webrtc';
   audioPath?: string; // e.g. '/audio.wav' or '/audio.opus'
 }
 export interface KeyControls {

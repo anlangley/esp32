@@ -1,0 +1,62 @@
+# Kế Hoạch Tái Cấu Trúc & Nâng Cấp Firmware ESP32 (FreeRTOS & Modularizing)
+
+Tái cấu trúc file đơn khối `main.cpp` của ESP32 sang kiến trúc đa nhiệm **FreeRTOS Dual-Core** và mô hình **Modular C++**, tích hợp thuật toán **Tăng tốc mượt (Acceleration Ramping)**, xử lý tín hiệu **S.BUS chuyên dụng**, và cảm biến khoảng cách **Phi Chặn (Non-blocking)**.
+
+## User Review Required
+
+> [!IMPORTANT]
+> - **Cơ chế FreeRTOS Dual-Core**: Core 1 sẽ dành toàn bộ tài nguyên cho **Real-time Motor Control & S.BUS Parsing (100Hz)**; Core 0 sẽ đảm nhận **WiFi, WebSockets & Telemetry**.
+> - **Giữ nguyên sơ đồ chân PIN & thông số WiFi mặc định**: Mọi chân GPIO (Motor, Ultrasonic, S.BUS) và cấu hình mạng hiện tại vẫn được bảo toàn để đảm bảo tương thích 100% phần cứng cũ.
+> - **Tùy chọn bổ sung**: Tích hợp thuật toán Ramp Smooth Start/Stop giúp triệt tiêu dòng sụt áp Inrush Current gây reset ESP32.
+
+## Proposed Changes
+
+### Firmware ESP32 (`firmware/esp32`)
+
+---
+
+#### [NEW] [config.h](file:///d:/CNTT/duan_esp32/firmware/esp32/include/config.h)
+- Chứa toàn bộ khai báo chân GPIO, thông số PWM, hằng số Failsafe, thông số mạng WiFi/WS.
+- Khai báo các cấu trúc dữ liệu (`ControlCommand`, `TelemetryData`, `RCChannels`) và FreeRTOS Queue handles.
+
+#### [NEW] [motor_driver.h](file:///d:/CNTT/duan_esp32/firmware/esp32/include/motor_driver.h) & [motor_driver.cpp](file:///d:/CNTT/duan_esp32/firmware/esp32/src/motor_driver.cpp)
+- Khởi tạo LEDC PWM (tương thích cả ESP32 Core v2.x và v3.x).
+- Hàm `driveMotorsDirect()` và `processDriveWithRamp()`: tính toán vi sai X, Y, giới hạn tốc độ và nội suy mượt PWM (Acceleration/Deceleration Ramping).
+- Tự động phanh an toàn khi phát hiện vật cản từ cảm biến.
+
+#### [NEW] [sbus_parser.h](file:///d:/CNTT/duan_esp32/firmware/esp32/include/sbus_parser.h) & [sbus_parser.cpp](file:///d:/CNTT/duan_esp32/firmware/esp32/src/sbus_parser.cpp)
+- Module giải mã khung tin S.BUS 25-bytes từ `Serial2`.
+- Kiểm tra cờ Failsafe / Frame Lost, tính toán deadzone (40us) và mapping giá trị xung CH1-CH5 sang dạng điều khiển tiêu chuẩn.
+
+#### [NEW] [sensor_manager.h](file:///d:/CNTT/duan_esp32/firmware/esp32/include/sensor_manager.h) & [sensor_manager.cpp](file:///d:/CNTT/duan_esp32/firmware/esp32/src/sensor_manager.cpp)
+- Đo khoảng cách HC-SR04 theo cơ chế phi chặn (non-blocking timing / state-machine).
+- Đọc và lọc nhiễu điện áp ADC Pin (Oversampling & Moving Average).
+
+#### [NEW] [network_manager.h](file:///d:/CNTT/duan_esp32/firmware/esp32/include/network_manager.h) & [network_manager.cpp](file:///d:/CNTT/duan_esp32/firmware/esp32/src/network_manager.cpp)
+- Quản lý WiFi Station (Static IP + Auto Reconnect).
+- Quản lý WebSocket Client (xử lý handshake Socket.IO `40`, Ping/Pong `2`/`3`, nhận `drive_command` `42[...]`).
+- Nạp code không dây ArduinoOTA.
+- Đóng gói Telemetry JSON và gửi định kỳ.
+
+#### [MODIFY] [main.cpp](file:///d:/CNTT/duan_esp32/firmware/esp32/src/main.cpp)
+- Viết lại thành file khởi tạo gọn gàng (~80 dòng):
+  - Khởi tạo các module phần cứng.
+  - Khởi tạo FreeRTOS Task: `Task_MotorControl` (Core 1, Priority 5) & `Task_Network` (Core 0, Priority 1).
+  - Quản lý Task Watchdog Timer (`esp_task_wdt`).
+
+---
+
+## Verification Plan
+
+### Automated / Build Verification
+- Biên dịch dự án bằng PlatformIO CLI:
+  ```powershell
+  cd d:\CNTT\duan_esp32\firmware\esp32
+  pio run
+  ```
+- Đảm bảo biên dịch thành công 0 lỗi, 0 warning nghiêm trọng.
+
+### Manual Verification
+1. Kiểm tra phản hồi tín hiệu lái qua WebSocket từ Web Cockpit.
+2. Kiểm tra gạt công tắc CH5 trên tay điều khiển MC6C để chuyển giao chế độ mượt mà.
+3. Kiểm tra tính năng phanh tự động khi cảm biến phát hiện khoảng cách < 15cm.

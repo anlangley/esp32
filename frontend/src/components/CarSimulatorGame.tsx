@@ -185,6 +185,12 @@ export const CarSimulatorGame = ({
     }
   };
 
+  // Keep a realtime ref of driveCommand to prevent stale closures in requestAnimationFrame loop
+  const driveCommandRef = useRef(driveCommand);
+  useEffect(() => {
+    driveCommandRef.current = driveCommand;
+  }, [driveCommand]);
+
   // Main Physics & Render Loop
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -205,27 +211,26 @@ export const CarSimulatorGame = ({
       lastTimeRef.current = now;
 
       // 1. Process Inputs (from driveCommand props or mouse steering)
-      let inputX = driveCommand.x;
-      let inputY = driveCommand.y;
+      const currentCmd = driveCommandRef.current || { x: 0, y: 0, speedLimit: 80 };
+      let inputX = currentCmd.x;
+      let inputY = currentCmd.y;
 
       if (isMouseSteerActive && mousePosRef.current.active && Math.abs(mousePosRef.current.x) > 0.05) {
         inputX = mousePosRef.current.x;
       }
 
       // Apply speed limit scaling factor (10% to 100%)
-      const speedFactor = (driveCommand.speedLimit || 80) / 100;
+      const speedFactor = (currentCmd.speedLimit || 80) / 100;
       const targetMaxSpeed = car.maxSpeed * speedFactor;
 
-      // Accelerate / Reverse logic
+      // Accelerate / Reverse logic (Phản hồi tức thì khi AI Agent hoặc phím bấm ra lệnh)
       if (inputY > 0.05) {
-        car.speed += car.accel * inputY * speedFactor;
-        if (car.speed > targetMaxSpeed) car.speed = targetMaxSpeed;
+        car.speed = Math.min(targetMaxSpeed, Math.max(car.speed + 0.4 * inputY, targetMaxSpeed * 0.5));
       } else if (inputY < -0.05) {
-        car.speed += car.accel * inputY * speedFactor * 0.7; // Reversing is 70% speed
-        if (car.speed < -targetMaxSpeed * 0.5) car.speed = -targetMaxSpeed * 0.5;
+        car.speed = Math.max(-targetMaxSpeed * 0.6, Math.min(car.speed + 0.4 * inputY, -targetMaxSpeed * 0.3));
       } else {
-        car.speed *= car.friction;
-        if (Math.abs(car.speed) < 0.02) car.speed = 0;
+        car.speed *= 0.85; // Phanh tự nhiên khi nhả phím/hết duration
+        if (Math.abs(car.speed) < 0.05) car.speed = 0;
       }
 
       // Steering logic (Rotation rate proportional to speed & steer input)
@@ -575,7 +580,12 @@ export const CarSimulatorGame = ({
 
         <div className="flex items-center space-x-3 pointer-events-auto">
           <button
-            onClick={resetCar}
+            tabIndex={-1}
+            onClick={(e) => {
+              e.preventDefault();
+              (e.currentTarget as HTMLElement).blur();
+              resetCar();
+            }}
             title="Đặt lại vị trí xe về trung tâm bản đồ"
             className="flex items-center space-x-1 px-2.5 py-1 rounded bg-black/60 border border-cyber-neonBlue/40 text-cyber-neonBlue hover:bg-cyber-neonBlue/20 text-[10px] font-mono font-bold transition-all"
           >

@@ -25,13 +25,21 @@ graph TB
         DB[(PostgreSQL Database)]
     end
 
-    subgraph Hardware ["Xe IoT (Physical Hardware)"]
-        ESP32["ESP32 DevKit V1 (Arduino C++)"]
+    subgraph Hardware ["Xe IoT (Physical Hardware 2 Tầng)"]
+        subgraph Tier2 ["Tầng 2 (Sàn Trên: Điều khiển & Nguồn)"]
+            LiPo["Pin LiPo 2S 2200mAh (Dây nhám Velcro)"]
+            ESP32["ESP32 DevKit V1 + Đế mở rộng Terminal 30P"]
+            Receiver["Bộ Thu MC6C (S.BUS GPIO 16)"]
+            ServoCam["Servo MG90S Quay Camera (GPIO 18 - Mép trước)"]
+            AndroidCam["Samsung Galaxy S10 5G (IP Webcam App - MJPEG Stream)"]
+        end
+        subgraph Tier1 ["Tầng 1 (Sàn Dưới: Động cơ & Công suất)"]
+            MotorDriver["Motor Driver L298N (Phía sau)"]
+            LM2596["Mạch Hạ Áp LM2596 (Jack Balance)"]
+            Motors["4 Động cơ DC Giảm Tốc (2 Bên)"]
+            Ultrasonic["Cảm biến Siêu Âm HC-SR04 (Đầu trước)"]
+        end
         WiFi["WiFi Client"]
-        MotorDriver["Motor Driver (L298N / BTS7960)"]
-        Motors["Động cơ DC"]
-        Sensors["Cảm biến (Pin, Ultrasonic, IMU)"]
-        AndroidCam["Android Phone (IP Webcam App)"]
     end
 
     %% Luồng điều khiển & Dữ liệu trạng thái
