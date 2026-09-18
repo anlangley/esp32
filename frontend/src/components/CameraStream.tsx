@@ -257,38 +257,40 @@ export const CameraStream = ({
   };
 
   return (
-    <div className={`relative w-full aspect-video rounded-xl overflow-hidden glass-panel-neon transition-all duration-300 ${
+    <div className={`relative w-full aspect-video lg:aspect-none min-h-[380px] lg:min-h-[495px] xl:min-h-[535px] rounded-xl overflow-hidden glass-panel-neon transition-all duration-300 ${
       isCollisionWarning ? 'border-cyber-neonRed shadow-[0_0_30px_rgba(255,0,60,0.3)] animate-pulse-fast' : ''
     }`}>
       {/* Header Bar */}
-      <div className="absolute top-0 left-0 right-0 z-20 flex justify-between items-center px-4 py-2 bg-gradient-to-b from-black/80 to-transparent">
-        <div className="flex items-center space-x-2">
-          <Camera className={`w-5 h-5 ${errorCount === 0 ? 'text-cyber-neonGreen animate-pulse' : 'text-gray-400'}`} />
+      <div className="absolute top-0 left-0 right-0 z-20 flex flex-wrap justify-between items-center px-4 py-2 bg-gradient-to-b from-black/90 via-black/60 to-transparent gap-2">
+        <div className="flex items-center space-x-2 flex-wrap gap-y-1">
+          <Camera className={`w-5 h-5 ${isDemoMode ? 'text-purple-400 animate-pulse' : errorCount === 0 ? 'text-cyber-neonGreen animate-pulse' : 'text-gray-400'}`} />
           <span className="text-xs font-semibold uppercase tracking-wider text-gray-200">
-            IP Camera Live Stream
+            {isDemoMode ? 'Mô phỏng Game 2D' : 'IP Camera Live Stream'}
           </span>
           
           {/* Camera Stats Badges (FPS & RSSI) */}
-          <div className="flex items-center space-x-1.5 ml-2">
-            <span className={`text-[10px] font-mono px-2 py-0.5 rounded border font-semibold ${
-              realFps >= 15 
-                ? 'bg-cyber-neonGreen/10 border-cyber-neonGreen/40 text-cyber-neonGreen' 
-                : realFps > 0 
-                  ? 'bg-cyber-neonYellow/10 border-cyber-neonYellow/40 text-cyber-neonYellow'
-                  : 'bg-cyber-neonRed/10 border-cyber-neonRed/40 text-cyber-neonRed'
-            }`}>
-              ⚡ {realFps} FPS
-            </span>
-            <span className={`text-[10px] font-mono px-2 py-0.5 rounded border font-semibold ${
-              realCameraRssi > -70 
-                ? 'bg-cyber-neonBlue/10 border-cyber-neonBlue/40 text-cyber-neonBlue' 
-                : realCameraRssi > -100 
-                  ? 'bg-cyber-neonYellow/10 border-cyber-neonYellow/40 text-cyber-neonYellow'
-                  : 'bg-cyber-neonRed/10 border-cyber-neonRed/40 text-cyber-neonRed'
-            }`}>
-              📡 CAM: {realCameraRssi > -100 ? `${realCameraRssi} dBm` : 'OFFLINE'}
-            </span>
-          </div>
+          {!isDemoMode && (
+            <div className="flex items-center space-x-1.5 ml-2">
+              <span className={`text-[10px] font-mono px-2 py-0.5 rounded border font-semibold ${
+                realFps >= 15 
+                  ? 'bg-cyber-neonGreen/10 border-cyber-neonGreen/40 text-cyber-neonGreen' 
+                  : realFps > 0 
+                    ? 'bg-cyber-neonYellow/10 border-cyber-neonYellow/40 text-cyber-neonYellow'
+                    : 'bg-cyber-neonRed/10 border-cyber-neonRed/40 text-cyber-neonRed'
+              }`}>
+                ⚡ {realFps} FPS
+              </span>
+              <span className={`text-[10px] font-mono px-2 py-0.5 rounded border font-semibold ${
+                realCameraRssi > -70 
+                  ? 'bg-cyber-neonBlue/10 border-cyber-neonBlue/40 text-cyber-neonBlue' 
+                  : realCameraRssi > -100 
+                    ? 'bg-cyber-neonYellow/10 border-cyber-neonYellow/40 text-cyber-neonYellow'
+                    : 'bg-cyber-neonRed/10 border-cyber-neonRed/40 text-cyber-neonRed'
+              }`}>
+                📡 CAM: {realCameraRssi > -100 ? `${realCameraRssi} dBm` : 'OFFLINE'}
+              </span>
+            </div>
+          )}
 
           {/* Demo Game Switcher Button */}
           <button

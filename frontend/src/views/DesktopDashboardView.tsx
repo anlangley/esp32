@@ -151,9 +151,9 @@ export const DesktopDashboardView = ({
       </header>
 
       {/* Main Layout Grid for Desktop */}
-      <main className="grid grid-cols-1 lg:grid-cols-12 gap-4">
+      <main className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-stretch">
         {/* Left Column: Camera and Control Panel */}
-        <section className="lg:col-span-8 space-y-4">
+        <section className="lg:col-span-8 flex flex-col gap-4 h-full justify-between">
           {/* Camera Player Component */}
           <CameraStream
             config={cameraConfig}
@@ -168,7 +168,7 @@ export const DesktopDashboardView = ({
             setIsDemoMode={setIsDemoMode}
           />
 
-          {/* Unified Controls HUD Component (Joystick, WASD, Hand Gestures) */}
+          {/* Unified Controls HUD Component (Joystick, WASD) */}
           <JoystickControl
             onCommandChange={handleCommandChange}
             speedLimit={speedLimit}
@@ -178,27 +178,31 @@ export const DesktopDashboardView = ({
         </section>
 
         {/* Right Column: Telemetry Gauges & System Terminal Logs */}
-        <section className="lg:col-span-4 flex flex-col gap-4 h-full">
+        <section className="lg:col-span-4 flex flex-col gap-4 min-h-0 overflow-hidden">
           {/* Telemetry data readings panel */}
-          <TelemetryPanel data={telemetry} isOnline={isOnline} />
+          <div className="shrink-0">
+            <TelemetryPanel data={telemetry} isOnline={isOnline} />
+          </div>
 
           {/* AI Agent Voice Control Panel */}
-          <VoiceControl
-            isListening={voiceAgent.isListening}
-            isProcessing={voiceAgent.isProcessing}
-            transcript={voiceAgent.transcript}
-            messages={voiceAgent.messages}
-            isTtsEnabled={voiceAgent.isTtsEnabled}
-            setIsTtsEnabled={voiceAgent.setIsTtsEnabled}
-            toggleListening={voiceAgent.toggleListening}
-            sendCommand={voiceAgent.sendCommand}
-            clearMessages={voiceAgent.clearMessages}
-            currentEmotion={voiceAgent.currentEmotion}
-          />
+          <div className="shrink-0">
+            <VoiceControl
+              isListening={voiceAgent.isListening}
+              isProcessing={voiceAgent.isProcessing}
+              transcript={voiceAgent.transcript}
+              messages={voiceAgent.messages}
+              isTtsEnabled={voiceAgent.isTtsEnabled}
+              setIsTtsEnabled={voiceAgent.setIsTtsEnabled}
+              toggleListening={voiceAgent.toggleListening}
+              sendCommand={voiceAgent.sendCommand}
+              clearMessages={voiceAgent.clearMessages}
+              currentEmotion={voiceAgent.currentEmotion}
+            />
+          </div>
 
           {/* Full System Terminal Logs Panel for PC */}
-          <div className="flex-1 glass-panel rounded-xl p-4 flex flex-col justify-between border border-white/5 shadow-md min-h-[220px] lg:min-h-0">
-            <div className="flex justify-between items-center mb-2">
+          <div className="flex-1 min-h-0 glass-panel rounded-xl p-4 flex flex-col border border-white/5 shadow-md">
+            <div className="flex justify-between items-center mb-2 shrink-0">
               <span className="text-xs uppercase font-bold text-cyber-neonBlue tracking-wider flex items-center">
                 <Terminal className="w-4 h-4 mr-1.5 text-cyber-neonBlue" /> Nhật ký hệ thống
               </span>
@@ -210,8 +214,8 @@ export const DesktopDashboardView = ({
               </button>
             </div>
 
-            {/* Logs display container */}
-            <div className="flex-1 bg-black/60 rounded-lg p-2.5 font-mono text-[10px] overflow-y-auto max-h-[260px] flex flex-col-reverse gap-1 border border-white/5 no-scrollbar">
+            {/* Logs display container - fixed max height, scrolls internally */}
+            <div className="bg-black/60 rounded-lg p-2.5 font-mono text-[10px] overflow-y-auto max-h-[200px] flex flex-col-reverse gap-1 border border-white/5">
               <div ref={terminalEndRef}></div>
               {logs.length > 0 ? (
                 logs.map((log) => (
@@ -232,7 +236,7 @@ export const DesktopDashboardView = ({
               )}
             </div>
 
-            <div className="flex items-center space-x-1.5 text-[9px] text-gray-500 font-mono mt-2 pt-1 border-t border-white/[0.04]">
+            <div className="flex items-center space-x-1.5 text-[9px] text-gray-500 font-mono mt-2 pt-1 border-t border-white/[0.04] shrink-0">
               <HardDrive className="w-3.5 h-3.5 text-gray-600" />
               <span>Giao thức: WebSocket (WSS) + Camera HTTP MJPEG</span>
             </div>

@@ -1,0 +1,30 @@
+graph TD
+    classDef frontend fill:#3b82f6,stroke:#1e40af,stroke-width:2px,color:#fff;
+    classDef backend fill:#10b981,stroke:#047857,stroke-width:2px,color:#fff;
+    classDef firmware fill:#f59e0b,stroke:#b45309,stroke-width:2px,color:#fff;
+    classDef ext fill:#8b5cf6,stroke:#5b21b6,stroke-width:2px,color:#fff;
+
+    subgraph Tier1 [1. TANG UNG DUNG / APPLICATION LAYER]
+        UI[Giao dien React/Vite Dashboard]:::frontend
+        WS_FE[Socket.io Client]:::frontend
+        UI <--> WS_FE
+    end
+
+    subgraph Tier2 [2. TANG XU LY & MANG / BACKEND SERVER]
+        Node[Node.js / Express Server]:::backend
+        WS_Server[Socket.io Server]:::backend
+        AI[Google Generative AI]:::ext
+        Node <--> WS_Server
+        Node <--> AI
+    end
+
+    subgraph Tier3 [3. TANG THIET BI / DEVICE LAYER]
+        ESP32[Vi dieu khien ESP32]:::firmware
+        Sensors[Cam bien - Sensor Manager]:::firmware
+        Motors[Dong co Servo / Banh xe]:::firmware
+        ESP32 <--> Sensors
+        ESP32 <--> Motors
+    end
+
+    WS_FE <===>|WebSocket| WS_Server
+    WS_Server <===>|WebSocket| ESP32

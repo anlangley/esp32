@@ -18,7 +18,7 @@ export const QRCodeModal = ({ isOpen, onClose }: QRCodeModalProps) => {
       const hostname = window.location.hostname;
       const port = window.location.port ? `:${window.location.port}` : ':5173';
       const protocol = window.location.protocol;
-      
+
       let defaultUrl = `${protocol}//${hostname}${port}`;
       setCurrentUrl(defaultUrl);
 
@@ -40,8 +40,8 @@ export const QRCodeModal = ({ isOpen, onClose }: QRCodeModalProps) => {
 
   if (!isOpen) return null;
 
-  const targetUrl = customIp 
-    ? `http://${customIp.replace(/^https?:\/\//, '')}:${window.location.port || '5173'}` 
+  const targetUrl = customIp
+    ? `http://${customIp.replace(/^https?:\/\//, '')}:${window.location.port || '5173'}`
     : currentUrl;
 
   const handleCopy = () => {
@@ -52,7 +52,7 @@ export const QRCodeModal = ({ isOpen, onClose }: QRCodeModalProps) => {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fadeIn">
-      <div className="relative w-full max-w-md glass-panel-neon p-6 rounded-2xl border border-cyber-neonBlue/30 shadow-[0_0_30px_rgba(0,240,255,0.15)] flex flex-col space-y-4">
+      <div className="relative w-full max-w-md max-h-[95vh] overflow-y-auto glass-panel-neon p-6 rounded-2xl border border-cyber-neonBlue/30 shadow-[0_0_30px_rgba(0,240,255,0.15)] flex flex-col space-y-4">
         {/* Header */}
         <div className="flex justify-between items-center pb-3 border-b border-white/10">
           <div className="flex items-center space-x-2 text-cyber-neonBlue font-bold text-base uppercase tracking-wider">
@@ -75,8 +75,8 @@ export const QRCodeModal = ({ isOpen, onClose }: QRCodeModalProps) => {
 
         {/* QR Code Canvas */}
         <div className="flex flex-col items-center justify-center p-5 bg-white rounded-2xl shadow-inner border border-white/20">
-          <QRCodeSVG 
-            value={targetUrl} 
+          <QRCodeSVG
+            value={targetUrl}
             size={200}
             level="H"
             includeMargin={true}
@@ -97,7 +97,7 @@ export const QRCodeModal = ({ isOpen, onClose }: QRCodeModalProps) => {
               <span className="text-cyber-neonYellow">Tự động nhận diện Network IP</span>
             )}
           </label>
-          
+
           <div className="flex items-center space-x-2">
             <div className="flex-1 bg-black/60 border border-white/10 rounded-xl px-3 py-2 text-xs text-cyber-neonBlue font-mono truncate">
               {targetUrl}

@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { Shield, ArrowUp, ArrowDown, ArrowLeft, ArrowRight, Radio, Hand, Keyboard, Gamepad2 } from 'lucide-react';
+import { Shield, ArrowUp, ArrowDown, ArrowLeft, ArrowRight, Radio, Keyboard, Gamepad2 } from 'lucide-react';
 import type { ControlCommand, KeyControls } from '../types/control';
-import { HandGestureControl } from './HandGestureControl';
 
 interface JoystickControlProps {
   onCommandChange: (cmd: ControlCommand) => void;
@@ -19,8 +18,8 @@ export const JoystickControl = ({
   const containerRef = useRef<HTMLDivElement>(null);
   const handleRef = useRef<HTMLDivElement>(null);
   
-  // Chế độ điều khiển active: 'joystick' (Cần gạt/Chuột), 'keyboard' (Bàn phím WASD), 'hand' (Cử chỉ tay AI)
-  const [controlMode, setControlMode] = useState<'joystick' | 'keyboard' | 'hand'>('joystick');
+  // Chế độ điều khiển active: 'joystick' (Cần gạt/Chuột), 'keyboard' (Bàn phím WASD)
+  const [controlMode, setControlMode] = useState<'joystick' | 'keyboard'>('joystick');
   
   const [isDragging, setIsDragging] = useState(false);
   const [coords, setCoords] = useState({ x: 0, y: 0 }); // Local joystick visual offset (-60 to 60)
@@ -242,11 +241,6 @@ export const JoystickControl = ({
     };
   }, [gamepadName, updateCommand]);
 
-  // Nhận lệnh cử chỉ tay và cập nhật trực tiếp cho Joystick & Xe
-  const handleHandDriveCommand = useCallback((cmd: { x: number; y: number }) => {
-    updateCommand(cmd.x, cmd.y);
-  }, [updateCommand]);
-
   return (
     <div className="glass-panel rounded-xl p-4 flex flex-col space-y-4 border border-white/5 shadow-md">
       {/* Selector Tab: Chọn phương thức điều khiển */}
@@ -279,58 +273,11 @@ export const JoystickControl = ({
             <Keyboard className="w-3.5 h-3.5" />
             <span>Bàn phím WASD</span>
           </button>
-
-          <button
-            onClick={() => { setControlMode('hand'); updateCommand(0, 0); }}
-            className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
-              controlMode === 'hand'
-                ? 'bg-cyber-neonGreen text-black font-black shadow-[0_0_12px_#39ff14]'
-                : 'text-gray-400 hover:text-white hover:bg-white/5'
-            }`}
-          >
-            <Hand className="w-3.5 h-3.5" />
-            <span>🖐️ Cử chỉ tay AI</span>
-          </button>
         </div>
       </div>
 
-      {/* Main Content Area Based on Control Mode */}
-      {controlMode === 'hand' ? (
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-center">
-          {/* Virtual Joystick Visual Indicator */}
-          <div className="lg:col-span-4 flex flex-col items-center justify-center p-3 bg-black/40 rounded-xl border border-white/5">
-            <span className="text-[10px] uppercase font-bold text-gray-400 mb-2">Phản hồi Cần Joystick Realtime</span>
-            <div 
-              className="relative w-36 h-36 rounded-full border border-cyber-neonBlue/30 bg-black/80 flex items-center justify-center shadow-[inset_0_0_20px_rgba(0,240,255,0.1)]"
-            >
-              <div className="absolute inset-x-0 h-[1px] bg-cyber-neonBlue/20"></div>
-              <div className="absolute inset-y-0 w-[1px] bg-cyber-neonBlue/20"></div>
-
-              <div 
-                style={{
-                  transform: `translate3d(${coords.x}px, ${coords.y}px, 0)`
-                }}
-                className="w-12 h-12 rounded-full bg-gradient-to-tr from-cyber-neonGreen/80 to-emerald-400 border border-cyber-neonGreen shadow-[0_0_15px_rgba(57,255,20,0.6)] flex items-center justify-center transition-all ease-out duration-75"
-              >
-                <div className="w-3 h-3 rounded-full bg-white/40"></div>
-              </div>
-            </div>
-
-            <div className="text-[11px] font-mono font-bold text-cyber-neonGreen mt-2">
-              X: {currentCommand.current.x.toFixed(2)} | Y: {currentCommand.current.y.toFixed(2)}
-            </div>
-          </div>
-
-          {/* Hand Gesture Laptop Camera View */}
-          <div className="lg:col-span-8 h-[220px] w-full overflow-hidden">
-            <HandGestureControl
-              isActive={true}
-              onDriveCommand={handleHandDriveCommand}
-            />
-          </div>
-        </div>
-      ) : (
-        <div className="flex flex-col md:flex-row items-center justify-between gap-6">
+      {/* Main Content Area */}
+      <div className="flex flex-col md:flex-row items-center justify-between gap-6">
           {/* Virtual Joystick Component */}
           <div className="flex flex-col items-center space-y-2">
             <div 
@@ -462,7 +409,6 @@ export const JoystickControl = ({
             )}
           </div>
         </div>
-      )}
     </div>
   );
 };

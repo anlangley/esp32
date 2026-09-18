@@ -72,7 +72,7 @@ float readBatteryVoltage() {
   }
   float rawAdc = sumAdc / 10.0f;
   float pinVoltage = (rawAdc / 4095.0f) * 3.3f;
-  return pinVoltage * 11.0f; 
+  return pinVoltage * 5.0f; // Mạch cảm biến điện áp 25V (chia 5)
 #else
   return 12.6f;
 #endif

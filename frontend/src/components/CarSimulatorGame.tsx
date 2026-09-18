@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
-import { Gamepad2, RotateCcw, ShieldAlert, Navigation, Zap } from 'lucide-react';
+import { RotateCcw, ShieldAlert, Navigation, Zap } from 'lucide-react';
 import type { TelemetryData } from '../types/control';
 
 interface CarSimulatorGameProps {
@@ -565,34 +565,22 @@ export const CarSimulatorGame = ({
   }, [driveCommand, onDriveCommand, onTelemetryUpdate]);
 
   return (
-    <div className="relative w-full aspect-video rounded-xl overflow-hidden glass-panel-neon flex flex-col items-center justify-center border border-cyber-neonBlue/30 shadow-[0_0_30px_rgba(0,240,255,0.15)]">
-      {/* Top Overlay HUD Bar */}
-      <div className="absolute top-0 left-0 right-0 z-20 flex justify-between items-center px-4 py-2 bg-gradient-to-b from-black/90 via-black/60 to-transparent border-b border-white/5 pointer-events-none">
-        <div className="flex items-center space-x-3">
-          <div className="flex items-center space-x-1.5 bg-cyber-neonPurple/20 border border-cyber-neonPurple/50 px-2.5 py-0.5 rounded-full text-cyber-neonPurple text-xs font-mono font-bold">
-            <Gamepad2 className="w-3.5 h-3.5 animate-pulse text-purple-400" />
-            <span>MÔ PHỎNG GAME 2D</span>
-          </div>
-          <span className="text-[10px] font-mono text-gray-300 hidden sm:inline">
-            ⚡ Động cơ vật lý Real-time + Radar Cảm biến Siêu âm
-          </span>
-        </div>
-
-        <div className="flex items-center space-x-3 pointer-events-auto">
-          <button
-            tabIndex={-1}
-            onClick={(e) => {
-              e.preventDefault();
-              (e.currentTarget as HTMLElement).blur();
-              resetCar();
-            }}
-            title="Đặt lại vị trí xe về trung tâm bản đồ"
-            className="flex items-center space-x-1 px-2.5 py-1 rounded bg-black/60 border border-cyber-neonBlue/40 text-cyber-neonBlue hover:bg-cyber-neonBlue/20 text-[10px] font-mono font-bold transition-all"
-          >
-            <RotateCcw className="w-3 h-3" />
-            <span>ĐẶT LẠI XE</span>
-          </button>
-        </div>
+    <div className="relative w-full h-full min-h-[360px] flex flex-col items-center justify-center overflow-hidden">
+      {/* Top Right Floating Reset Button (No top-0 overlap) */}
+      <div className="absolute top-12 right-4 z-20 pointer-events-auto">
+        <button
+          tabIndex={-1}
+          onClick={(e) => {
+            e.preventDefault();
+            (e.currentTarget as HTMLElement).blur();
+            resetCar();
+          }}
+          title="Đặt lại vị trí xe về trung tâm bản đồ"
+          className="flex items-center space-x-1.5 px-3 py-1 rounded-lg bg-black/80 backdrop-blur-md border border-cyber-neonBlue/50 text-cyber-neonBlue hover:bg-cyber-neonBlue/20 text-[10px] font-mono font-bold transition-all shadow-[0_0_12px_rgba(0,240,255,0.2)] active:scale-95"
+        >
+          <RotateCcw className="w-3.5 h-3.5" />
+          <span>ĐẶT LẠI XE</span>
+        </button>
       </div>
 
       {/* Collision Alert Banner Overlay */}
