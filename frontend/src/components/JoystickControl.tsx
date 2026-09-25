@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { Shield, ArrowUp, ArrowDown, ArrowLeft, ArrowRight, Radio, Keyboard, Gamepad2 } from 'lucide-react';
+import { Shield, ArrowUp, ArrowDown, ArrowLeft, ArrowRight, Radio, Keyboard, Gamepad2, Lock } from 'lucide-react';
 import type { ControlCommand, KeyControls } from '../types/control';
 
 interface JoystickControlProps {
@@ -7,6 +7,9 @@ interface JoystickControlProps {
   speedLimit: number;
   setSpeedLimit: (limit: number) => void;
   activeCommand?: { x: number; y: number };
+  isRcMode?: boolean;
+  rcThrottle?: number;
+  rcSteer?: number;
 }
 
 export const JoystickControl = ({
@@ -14,12 +17,24 @@ export const JoystickControl = ({
   speedLimit,
   setSpeedLimit,
   activeCommand,
+  isRcMode = false,
+  rcThrottle = 1500,
+  rcSteer = 1500,
 }: JoystickControlProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const handleRef = useRef<HTMLDivElement>(null);
   
-  // Chế độ điều khiển active: 'joystick' (Cần gạt/Chuột), 'keyboard' (Bàn phím WASD)
-  const [controlMode, setControlMode] = useState<'joystick' | 'keyboard'>('joystick');
+  // Chế độ điều khiển active: 'joystick' (Cần gạt ảo), 'keyboard' (Bàn phím WASD), 'sbus' (Tay cầm MC6C)
+  const [controlMode, setControlMode] = useState<'joystick' | 'keyboard' | 'sbus'>('joystick');
+
+  // Tự động chuyển giao diện sang Chế độ Tay Cầm S.BUS khi xe nhận tín hiệu từ phần cứng
+  useEffect(() => {
+    if (isRcMode) {
+      setControlMode('sbus');
+    } else {
+      setControlMode(prev => (prev === 'sbus' ? 'joystick' : prev));
+    }
+  }, [isRcMode]);
   
   const [isDragging, setIsDragging] = useState(false);
   const [coords, setCoords] = useState({ x: 0, y: 0 }); // Local joystick visual offset (-60 to 60)
@@ -241,6 +256,17 @@ export const JoystickControl = ({
     };
   }, [gamepadName, updateCommand]);
 
+  // Tính toán độ lệch và phần trăm hiển thị cho các kênh S.BUS
+  // Kênh 3 (Throttle): Đẩy lên (ch3 < 1500) là Tiến (dương, translate Y lên trên)
+  const throttleNormalized = -Math.max(-1, Math.min(1, ((rcThrottle || 1500) - 1500) / 400));
+  const throttlePct = Math.round(throttleNormalized * 100);
+  const throttleOffsetY = -throttleNormalized * 38;
+
+  // Kênh 1 (Steering): Đảo chiều theo phản hồi người dùng để khớp đúng tay gạt vật lý
+  const steerNormalized = -Math.max(-1, Math.min(1, ((rcSteer || 1500) - 1500) / 400));
+  const steerPct = Math.round(steerNormalized * 100);
+  const steerOffsetX = steerNormalized * 38;
+
   return (
     <div className="glass-panel rounded-xl p-4 flex flex-col space-y-4 border border-white/5 shadow-md">
       {/* Selector Tab: Chọn phương thức điều khiển */}
@@ -273,11 +299,139 @@ export const JoystickControl = ({
             <Keyboard className="w-3.5 h-3.5" />
             <span>Bàn phím WASD</span>
           </button>
+
+          {/* Tab 3: Tay Cầm S.BUS (MC6C) */}
+          <button
+            onClick={() => { setControlMode('sbus'); updateCommand(0, 0); }}
+            className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+              controlMode === 'sbus'
+                ? isRcMode
+                  ? 'bg-emerald-400 text-black font-black shadow-[0_0_12px_rgba(52,211,153,0.8)]'
+                  : 'bg-amber-400 text-black font-black shadow-[0_0_12px_rgba(251,191,36,0.8)]'
+                : isRcMode
+                  ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-400/50 animate-pulse'
+                  : 'text-gray-400 hover:text-white hover:bg-white/5'
+            }`}
+          >
+            <Radio className="w-3.5 h-3.5" />
+            <span>Tay Cầm S.BUS</span>
+            {isRcMode && <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>}
+          </button>
         </div>
       </div>
 
       {/* Main Content Area */}
-      <div className="flex flex-col md:flex-row items-center justify-between gap-6">
+      {controlMode === 'sbus' ? (
+        /* GIAO DIỆN TAY ĐIỀU KHIỂN S.BUS (MC6C DUAL-GIMBAL HUD) */
+        <div className="flex flex-col lg:flex-row items-center justify-between gap-6 py-2">
+          {/* Cụm 2 Cần Gạt Gimbal Phản Hồi Thời Gian Thực */}
+          <div className="flex items-center justify-center space-x-8 sm:space-x-12 shrink-0">
+            {/* Gimbal Trái: Throttle / Ga Kênh 3 */}
+            <div className="flex flex-col items-center space-y-2">
+              <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-gray-400 flex items-center gap-1">
+                Kênh 3 (Ga / Tiến Lùi)
+              </span>
+              <div className="relative w-32 h-32 rounded-full border-2 border-emerald-500/30 bg-black/70 flex items-center justify-center shadow-[inset_0_0_20px_rgba(16,185,129,0.15)]">
+                <div className="absolute inset-x-0 h-[1px] bg-emerald-500/20"></div>
+                <div className="absolute inset-y-0 w-[1px] bg-emerald-500/20"></div>
+
+                {/* Animated Gimbal Stick */}
+                <div
+                  style={{
+                    transform: `translate3d(0, ${throttleOffsetY}px, 0)`,
+                  }}
+                  className="w-12 h-12 rounded-full bg-gradient-to-tr from-emerald-600 to-emerald-400 border border-emerald-300 shadow-[0_0_15px_rgba(52,211,153,0.5)] flex items-center justify-center transition-transform duration-75"
+                >
+                  <div className="w-3.5 h-3.5 rounded-full bg-white/40"></div>
+                </div>
+              </div>
+              <div className="text-xs font-mono font-bold text-emerald-400">
+                {rcThrottle || 1500} µs ({throttlePct > 0 ? `+${throttlePct}% Tiến` : throttlePct < 0 ? `${throttlePct}% Lùi` : '0%'})
+              </div>
+            </div>
+
+            {/* Gimbal Phải: Steering / Hướng Lái Kênh 1 */}
+            <div className="flex flex-col items-center space-y-2">
+              <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-gray-400 flex items-center gap-1">
+                Kênh 1 (Hướng Lái)
+              </span>
+              <div className="relative w-32 h-32 rounded-full border-2 border-cyan-500/30 bg-black/70 flex items-center justify-center shadow-[inset_0_0_20px_rgba(0,240,255,0.15)]">
+                <div className="absolute inset-x-0 h-[1px] bg-cyan-500/20"></div>
+                <div className="absolute inset-y-0 w-[1px] bg-cyan-500/20"></div>
+
+                {/* Animated Gimbal Stick */}
+                <div
+                  style={{
+                    transform: `translate3d(${steerOffsetX}px, 0, 0)`,
+                  }}
+                  className="w-12 h-12 rounded-full bg-gradient-to-tr from-cyan-600 to-cyan-400 border border-cyan-300 shadow-[0_0_15px_rgba(0,240,255,0.5)] flex items-center justify-center transition-transform duration-75"
+                >
+                  <div className="w-3.5 h-3.5 rounded-full bg-white/40"></div>
+                </div>
+              </div>
+              <div className="text-xs font-mono font-bold text-cyan-400">
+                {rcSteer || 1500} µs ({steerPct > 0 ? `+${steerPct}% Phải` : steerPct < 0 ? `${steerPct}% Trái` : '0%'})
+              </div>
+            </div>
+          </div>
+
+          {/* Cụm Thông Tin Trạng Thái & Khóa An Toàn Web */}
+          <div className="flex-1 w-full space-y-3 bg-black/30 p-4 rounded-xl border border-white/5">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-2">
+                <span className={`w-3 h-3 rounded-full ${isRcMode ? 'bg-emerald-400 shadow-[0_0_10px_#34d399] animate-pulse' : 'bg-gray-500'}`}></span>
+                <span className="text-xs font-bold font-mono uppercase tracking-wider text-white">
+                  {isRcMode ? 'Tay Cầm MC6C Đang Nắm Quyền' : 'Chờ Gạt Công Tắc S.BUS (CH6)'}
+                </span>
+              </div>
+              <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/30 text-emerald-300">
+                100kbps S.BUS
+              </span>
+            </div>
+
+            {/* Thông báo khóa an toàn */}
+            <div className={`p-3 rounded-xl border text-xs font-mono leading-relaxed ${
+              isRcMode
+                ? 'bg-emerald-950/30 border-emerald-500/30 text-emerald-300'
+                : 'bg-white/5 border-white/10 text-gray-400'
+            }`}>
+              <div className="flex items-center gap-1.5 font-bold mb-1">
+                <Lock className="w-3.5 h-3.5" />
+                <span>{isRcMode ? 'Khóa an toàn Web: ĐANG BẬT' : 'Sẵn sàng chuyển đổi'}</span>
+              </div>
+              <p className="text-[11px] opacity-90">
+                {isRcMode
+                  ? 'Xe đang nhận lệnh trực tiếp từ tay điều khiển MC6C. Toàn bộ thao tác chuột/phím trên web tạm thời ngắt để nhường quyền ưu tiên tuyệt đối cho phần cứng.'
+                  : 'Gạt công tắc kênh 6 (CH6 > 1600µs) trên tay điều khiển MC6C để kích hoạt chế độ lái tay cầm phần cứng.'}
+              </p>
+            </div>
+
+            {/* Matrix thông số các kênh */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-1 font-mono text-[11px]">
+              <div className="bg-black/40 p-2 rounded-lg border border-white/5">
+                <span className="text-gray-500 block text-[9px]">KÊNH 1 (LÁI)</span>
+                <span className="text-cyan-300 font-bold">{rcSteer || 1500} µs</span>
+              </div>
+              <div className="bg-black/40 p-2 rounded-lg border border-white/5">
+                <span className="text-gray-500 block text-[9px]">KÊNH 3 (TIẾN / LÙI)</span>
+                <span className="text-emerald-300 font-bold">{rcThrottle || 1500} µs</span>
+              </div>
+              <div className="bg-black/40 p-2 rounded-lg border border-white/5">
+                <span className="text-gray-500 block text-[9px]">CÔNG TẮC CH6</span>
+                <span className={isRcMode ? 'text-emerald-400 font-bold' : 'text-gray-400'}>
+                  {isRcMode ? 'BẬT (>1600)' : 'TẮT (<1500)'}
+                </span>
+              </div>
+              <div className="bg-black/40 p-2 rounded-lg border border-white/5">
+                <span className="text-gray-500 block text-[9px]">FAILSAFE</span>
+                <span className="text-emerald-400 font-bold">AN TOÀN</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      ) : (
+        /* GIAO DIỆN JOYSTICK ẢO & BÀN PHÍM WASD */
+        <div className="flex flex-col md:flex-row items-center justify-between gap-6">
           {/* Virtual Joystick Component */}
           <div className="flex flex-col items-center space-y-2">
             <div 
@@ -409,6 +563,7 @@ export const JoystickControl = ({
             )}
           </div>
         </div>
+      )}
     </div>
   );
 };

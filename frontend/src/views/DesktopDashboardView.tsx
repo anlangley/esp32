@@ -1,14 +1,17 @@
+import { useState } from 'react';
 import { CameraStream } from '../components/CameraStream';
 import { JoystickControl } from '../components/JoystickControl';
 import { TelemetryPanel } from '../components/TelemetryPanel';
 import { VoiceControl } from '../components/VoiceControl';
 import { QRCodeModal } from '../components/QRCodeModal';
+import { VehicleModal } from '../components/VehicleModal';
+import { useAuth } from '../contexts/AuthContext';
 import { useVoiceAgent } from '../hooks/useVoiceAgent';
 import type { CameraConfig, TelemetryData, ControlCommand, LogMessage } from '../types/control';
 import type { Socket } from 'socket.io-client';
 import {
-  Terminal, Zap, Power, HelpCircle, HardDrive, QrCode,
-  Smartphone, Target
+  Terminal, ChevronDown, Power, HelpCircle, HardDrive, QrCode,
+  Smartphone, Target, LogOut, Car, User, Gamepad2
 } from 'lucide-react';
 
 interface DesktopDashboardViewProps {
@@ -26,7 +29,6 @@ interface DesktopDashboardViewProps {
 
   // Control
   handleCommandChange: (cmd: ControlCommand) => void;
-  handleMouseDrive: (cmd: { x: number; y: number }) => void;
   handleCameraConfigChange: (config: CameraConfig) => void;
   handleCameraStatsChange: (stats: { fps: number; rssi: number; isOnline: boolean }) => void;
   handleDemoTelemetryUpdate: (partial: Partial<TelemetryData>) => void;
@@ -62,7 +64,7 @@ interface DesktopDashboardViewProps {
 export const DesktopDashboardView = ({
   isOnline, telemetry, currentDriveCmd, cameraConfig,
   logs, clearLogs, terminalEndRef, addLog,
-  handleCommandChange, handleMouseDrive, handleCameraConfigChange,
+  handleCommandChange, handleCameraConfigChange,
   handleCameraStatsChange, handleDemoTelemetryUpdate, toggleConnection,
   isFollowMode = false, toggleFollowMode,
   speedLimit, setSpeedLimit,
@@ -73,80 +75,155 @@ export const DesktopDashboardView = ({
 }: DesktopDashboardViewProps) => {
   // AI Agent Voice Control hook
   const voiceAgent = useVoiceAgent(socketRef, addLog);
-  // Computed values
+  const { user, activeVehicle, logout } = useAuth();
+  
+  // Computed values: Bất kỳ xe nào không phải Demo CAR-A1B2C3 đều là xe phần cứng thật
+  const isRealCar = !!activeVehicle && activeVehicle.vehicleCode.toUpperCase() !== 'CAR-A1B2C3';
   const isCollisionWarning = isOnline && telemetry.distance <= 30;
+  const [isVehicleModalOpen, setIsVehicleModalOpen] = useState(false);
 
   return (
     <div className="min-h-screen flex flex-col p-4 md:p-6 max-w-7xl mx-auto space-y-4">
-      {/* Desktop Header bar */}
-      <header className="flex justify-between items-center glass-panel-neon px-4 py-3 rounded-2xl border-cyber-neonBlue/10 shadow-[0_0_15px_rgba(0,240,255,0.02)]">
-        <div className="flex items-center space-x-3">
+      {/* Desktop Header bar — Phương án A: Tinh giản 3 Cụm Chuẩn Cockpit */}
+      <header className="flex justify-between items-center glass-panel-neon px-4 py-2.5 rounded-2xl border-cyber-neonBlue/10 shadow-[0_0_15px_rgba(0,240,255,0.02)]">
+        {/* CỤM 1: THƯƠNG HIỆU & TRẠNG THÁI HỆ THỐNG */}
+        <div className="flex items-center space-x-3 shrink-0">
           <div className="relative">
             <div className={`w-3.5 h-3.5 rounded-full ${isOnline ? 'bg-cyber-neonGreen shadow-[0_0_8px_#39ff14]' : 'bg-cyber-neonRed'} transition-all duration-300`}></div>
             {isOnline && <div className="absolute inset-0 rounded-full bg-cyber-neonGreen animate-ping opacity-60"></div>}
           </div>
           <div>
-            <h1 className="text-sm font-bold tracking-widest text-white uppercase flex items-center">
-              IoT Car Cockpit <span className="ml-2 text-[9px] px-1.5 py-0.5 rounded bg-cyber-neonBlue/10 border border-cyber-neonBlue/20 text-cyber-neonBlue font-mono">v1.0.0</span>
-            </h1>
-            <p className="text-[9px] text-gray-400 font-mono">Device: ESP32 DevKit V1 + Android Camera</p>
+            <div className="flex items-center gap-2">
+              <h1 className="text-sm font-bold tracking-widest text-white uppercase">
+                IoT Car Cockpit
+              </h1>
+              <span className="text-[9px] px-1.5 py-0.5 rounded bg-cyber-neonBlue/10 border border-cyber-neonBlue/20 text-cyber-neonBlue font-mono">
+                v1.0.0
+              </span>
+            </div>
+            <p className="text-[10px] font-mono flex items-center gap-1.5">
+              {isRealCar ? (
+                isOnline ? (
+                  <span className="text-emerald-400 flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+                    Xe Thật ESP32 • Trực tuyến
+                  </span>
+                ) : (
+                  <span className="text-gray-400 flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-red-400"></span>
+                    Xe Thật ESP32 • Chờ kết nối
+                  </span>
+                )
+              ) : (
+                <span className="text-amber-400 flex items-center gap-1">
+                  <span className="w-1.5 h-1.5 rounded-full bg-amber-400"></span>
+                  Xe Demo Ảo • Buồng Lái 2D
+                </span>
+              )}
+            </p>
           </div>
         </div>
 
+        {/* CỤM 2 + CỤM 3: CÔNG CỤ ĐIỀU HƯỚNG & HỒ SƠ */}
         <div className="flex items-center space-x-2 sm:space-x-3">
-          {/* Follow Mode Toggle Button */}
-          <button
-            onClick={() => toggleFollowMode?.()}
-            className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-xs font-bold uppercase transition-all duration-200 ${
-              isFollowMode
-                ? 'bg-amber-500/20 border border-amber-400 text-amber-400 shadow-[0_0_12px_rgba(245,158,11,0.4)] animate-pulse'
-                : 'bg-cyber-neonYellow/10 border border-cyber-neonYellow/30 text-cyber-neonYellow hover:bg-cyber-neonYellow/20'
-            }`}
-            title="Bật/Tắt chế độ tự động bám theo vật thể phía trước bằng cảm biến siêu âm (60Hz)"
-          >
-            <Target className="w-3.5 h-3.5" />
-            <span>{isFollowMode ? 'Bám theo: BẬT 🚶' : 'Follow Mode'}</span>
-          </button>
+          {/* CỤM 2: CÁC NÚT CÔNG CỤ NHANH (TINH GỌN DẠNG ICON BUTTON) */}
+          <div className="flex items-center space-x-1.5 sm:space-x-2">
+            {/* Nút Bám theo vật thể (Follow Mode) */}
+            <button
+              onClick={() => toggleFollowMode?.()}
+              className={`flex items-center space-x-1.5 px-2.5 py-1.5 rounded-xl text-xs font-mono font-bold transition-all duration-200 border ${
+                isFollowMode
+                  ? 'bg-amber-500/20 border-amber-400 text-amber-300 shadow-[0_0_12px_rgba(245,158,11,0.35)] animate-pulse'
+                  : 'bg-white/5 border-white/10 text-gray-300 hover:text-white hover:border-white/25 hover:bg-white/10'
+              }`}
+              title="Bật/Tắt chế độ xe tự động bám theo vật thể phía trước bằng cảm biến siêu âm (60Hz)"
+            >
+              <Target className={`w-3.5 h-3.5 ${isFollowMode ? 'text-amber-400' : 'text-gray-400'}`} />
+              <span className="hidden md:inline">{isFollowMode ? 'Bám theo: BẬT' : 'Bám theo'}</span>
+            </button>
 
-          <div className="hidden sm:flex items-center space-x-1.5 text-xs font-mono text-gray-400">
-            <Zap className={`w-3.5 h-3.5 ${isOnline ? 'text-cyber-neonYellow animate-pulse' : 'text-gray-600'}`} />
-            <span>Chế độ: <span className="text-white font-bold">{isOnline ? 'Bình thường' : 'Ngoại tuyến'}</span></span>
+            {/* Nút Chuyển sang giao diện Mobile FPV (Toàn màn hình) */}
+            <button
+              onClick={() => {
+                setIsFpvMode(true);
+                if (document.documentElement.requestFullscreen && !document.fullscreenElement) {
+                  document.documentElement.requestFullscreen().catch(() => {});
+                }
+              }}
+              className="flex items-center space-x-1.5 px-2.5 py-1.5 rounded-xl text-xs font-mono font-medium text-gray-300 hover:text-emerald-300 bg-white/5 border border-white/10 hover:border-emerald-500/30 hover:bg-emerald-500/10 transition-all"
+              title="Mở giao diện buồng lái toàn màn hình phong cách Mobile FPV"
+            >
+              <Smartphone className="w-3.5 h-3.5 text-emerald-400" />
+              <span className="hidden xl:inline">Mobile FPV</span>
+            </button>
+
+            {/* Nút Quét mã QR */}
+            <button
+              onClick={() => setIsQrModalOpen(true)}
+              className="flex items-center space-x-1.5 px-2.5 py-1.5 rounded-xl text-xs font-mono font-medium text-gray-300 hover:text-cyan-300 bg-white/5 border border-white/10 hover:border-cyan-500/30 hover:bg-cyan-500/10 transition-all"
+              title="Quét mã QR để mở buồng lái trên điện thoại"
+            >
+              <QrCode className="w-3.5 h-3.5 text-cyan-400" />
+              <span className="hidden xl:inline">Quét QR</span>
+            </button>
+
+            {/* Nút Kết nối / Ngắt kết nối xe */}
+            <button
+              onClick={toggleConnection}
+              className={`flex items-center space-x-1.5 px-2.5 py-1.5 rounded-xl text-xs font-mono font-bold transition-all duration-200 border ${
+                isOnline
+                  ? 'bg-red-500/10 border-red-500/30 text-red-400 hover:bg-red-500/20 shadow-[0_0_8px_rgba(239,68,68,0.15)]'
+                  : 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/20 shadow-[0_0_8px_rgba(16,185,129,0.15)]'
+              }`}
+              title={isOnline ? 'Nhấn để ngắt kết nối WebSocket' : 'Nhấn để kết nối với xe'}
+            >
+              <Power className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">{isOnline ? 'Ngắt kết nối' : 'Kết nối'}</span>
+            </button>
           </div>
 
-          {/* Switch to Mobile FPV Mode button */}
-          <button
-            onClick={() => {
-              setIsFpvMode(true);
-              if (document.documentElement.requestFullscreen && !document.fullscreenElement) {
-                document.documentElement.requestFullscreen().catch(() => {});
-              }
-            }}
-            className="flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-xs font-bold uppercase transition-all duration-200 bg-cyber-neonGreen/10 border border-cyber-neonGreen/30 text-cyber-neonGreen hover:bg-cyber-neonGreen/20 shadow-[0_0_10px_rgba(57,255,20,0.15)] animate-pulse"
-            title="Xem giao diện App Lái Ngang FPV Mobile (Toàn màn hình ngay lập tức)"
-          >
-            <Smartphone className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline">Giao diện Mobile FPV</span>
-          </button>
+          {/* CỤM 3: QUẢN LÝ XE & HỒ SƠ NGƯỜI DÙNG */}
+          {user && (
+            <div className="flex items-center space-x-2 pl-2 sm:pl-3 border-l border-white/10">
+              {/* Thẻ xe: Click để mở modal danh sách & đổi xe / xóa xe */}
+              <button
+                onClick={() => setIsVehicleModalOpen(true)}
+                className={`flex items-center space-x-2 px-2.5 py-1.5 rounded-xl border text-xs font-mono transition-all ${
+                  isRealCar
+                    ? 'bg-cyan-500/10 border-cyan-500/30 text-cyan-300 hover:bg-cyan-500/20 hover:border-cyan-400/50 shadow-[0_0_10px_rgba(0,240,255,0.1)]'
+                    : 'bg-amber-500/10 border-amber-500/30 text-amber-300 hover:bg-amber-500/20 hover:border-amber-400/50 shadow-[0_0_10px_rgba(245,158,11,0.1)]'
+                }`}
+                title="Nhấn để đổi xe hoặc quản lý/xóa xe đã lưu"
+              >
+                {isRealCar ? <Car className="w-3.5 h-3.5 text-cyan-400 shrink-0" /> : <Gamepad2 className="w-3.5 h-3.5 text-amber-400 shrink-0" />}
+                <span className="font-bold tracking-wide">{isRealCar ? (user?.role === 'admin' ? activeVehicle?.vehicleCode : 'Xe Thật ESP32') : (activeVehicle?.vehicleCode || 'CAR-A1B2C3')}</span>
+                <span className="text-[10px] px-1 py-0.5 rounded bg-white/10 opacity-80">
+                  {isRealCar ? 'Thật' : 'Demo'}
+                </span>
+                <ChevronDown className="w-3 h-3 opacity-60 ml-0.5" />
+              </button>
 
-          <button
-            onClick={() => setIsQrModalOpen(true)}
-            className="flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-xs font-bold uppercase transition-all duration-200 bg-cyber-neonBlue/10 border border-cyber-neonBlue/30 text-cyber-neonBlue hover:bg-cyber-neonBlue/20"
-            title="Quét mã QR để mở giao diện điều khiển trên điện thoại"
-          >
-            <QrCode className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline">Quét QR</span>
-          </button>
+              {/* Thông tin tài khoản */}
+              <div className="hidden lg:flex flex-col text-right pl-1">
+                <span className="text-xs font-semibold text-white leading-tight flex items-center gap-1 justify-end">
+                  <User className="w-3 h-3 text-cyan-400" />
+                  {user.displayName || user.username}
+                </span>
+                <span className="text-[9px] text-gray-400 uppercase font-mono tracking-wider">
+                  {user.role === 'admin' ? '🛡️ Admin' : 'Lái xe'}
+                </span>
+              </div>
 
-          <button
-            onClick={toggleConnection}
-            className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-xs font-bold uppercase transition-all duration-200 ${isOnline
-              ? 'bg-cyber-neonRed/10 border border-cyber-neonRed/30 text-cyber-neonRed hover:bg-cyber-neonRed/20'
-              : 'bg-cyber-neonGreen/10 border border-cyber-neonGreen/30 text-cyber-neonGreen hover:bg-cyber-neonGreen/20'
-              }`}
-          >
-            <Power className="w-3.5 h-3.5" />
-            <span>{isOnline ? 'Ngắt kết nối' : 'Kết nối xe'}</span>
-          </button>
+              {/* Nút Đăng xuất */}
+              <button
+                onClick={logout}
+                className="p-1.5 rounded-xl text-gray-400 hover:text-red-400 hover:bg-red-500/10 border border-transparent hover:border-red-500/30 transition-all"
+                title="Đăng xuất"
+              >
+                <LogOut className="w-4 h-4" />
+              </button>
+            </div>
+          )}
         </div>
       </header>
 
@@ -159,7 +236,6 @@ export const DesktopDashboardView = ({
             config={cameraConfig}
             onChangeConfig={handleCameraConfigChange}
             isCollisionWarning={isCollisionWarning}
-            onDriveCommand={handleMouseDrive}
             onCameraStatsChange={handleCameraStatsChange}
             driveCommand={currentDriveCmd}
             onTelemetryUpdate={handleDemoTelemetryUpdate}
@@ -168,12 +244,15 @@ export const DesktopDashboardView = ({
             setIsDemoMode={setIsDemoMode}
           />
 
-          {/* Unified Controls HUD Component (Joystick, WASD) */}
+          {/* Unified Controls HUD Component (Joystick, WASD, S.BUS RC) */}
           <JoystickControl
             onCommandChange={handleCommandChange}
             speedLimit={speedLimit}
             setSpeedLimit={setSpeedLimit}
             activeCommand={currentDriveCmd}
+            isRcMode={telemetry.isRcMode}
+            rcThrottle={telemetry.rcThrottle}
+            rcSteer={telemetry.rcSteer}
           />
         </section>
 
@@ -259,6 +338,13 @@ export const DesktopDashboardView = ({
       <QRCodeModal
         isOpen={isQrModalOpen}
         onClose={() => setIsQrModalOpen(false)}
+      />
+
+
+      {/* Vehicle Management Modal */}
+      <VehicleModal
+        isOpen={isVehicleModalOpen}
+        onClose={() => setIsVehicleModalOpen(false)}
       />
     </div>
   );

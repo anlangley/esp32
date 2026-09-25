@@ -36,17 +36,17 @@ export const TelemetryPanel = ({ data, isOnline }: TelemetryPanelProps) => {
         </div>
         <div className="space-y-2">
           <div className="flex items-baseline space-x-1.5">
-            <span className="text-2xl font-bold font-mono tracking-tight text-white">
-              {isOnline ? data.batteryPercentage : 0}%
+            <span className="text-2xl font-bold font-mono tracking-tight text-white tabular-nums w-14 inline-block">
+              {isOnline ? data.batteryPercentage.toFixed(0) : 0}%
             </span>
-            <span className="text-xs text-gray-400 font-mono">
+            <span className="text-xs text-gray-400 font-mono tabular-nums">
               ({isOnline ? data.batteryVoltage.toFixed(1) : '0.0'}V)
             </span>
           </div>
           <div className="w-full h-1.5 bg-black/50 rounded-full overflow-hidden border border-white/5">
             <div
               style={{ width: `${isOnline ? data.batteryPercentage : 0}%` }}
-              className={`h-full rounded-full transition-all duration-500 ${getBatteryColor(isOnline ? data.batteryPercentage : 0)}`}
+              className={`h-full rounded-full transition-all duration-200 ease-linear ${getBatteryColor(isOnline ? data.batteryPercentage : 0)}`}
             ></div>
           </div>
         </div>
@@ -61,13 +61,13 @@ export const TelemetryPanel = ({ data, isOnline }: TelemetryPanelProps) => {
         <div className="space-y-2">
           <div className="flex items-baseline justify-between">
             <div className="flex items-baseline space-x-1">
-              <span className="text-xl font-bold font-mono tracking-tight text-white">
+              <span className="text-xl font-bold font-mono tracking-tight text-white tabular-nums w-10 inline-block text-right">
                 {isOnline ? data.rssi : -100}
               </span>
               <span className="text-[9px] uppercase text-gray-400 font-mono">dBm (Xe)</span>
             </div>
             <div className="flex items-baseline space-x-1">
-              <span className="text-sm font-bold font-mono tracking-tight text-cyber-neonBlue">
+              <span className="text-sm font-bold font-mono tracking-tight text-cyber-neonBlue tabular-nums w-8 inline-block text-right">
                 {data.cameraRssi !== undefined && data.cameraRssi > -100 ? `${data.cameraRssi}` : '---'}
               </span>
               <span className="text-[9px] uppercase text-gray-400 font-mono">dBm (Cam)</span>
@@ -77,7 +77,7 @@ export const TelemetryPanel = ({ data, isOnline }: TelemetryPanelProps) => {
             <span className={`text-[10px] font-semibold ${wifiInfo.color}`}>{isOnline ? wifiInfo.label : 'Ngoại tuyến'}</span>
             <div className="flex items-center space-x-2">
               {data.cameraFps !== undefined && (
-                <span className="text-[10px] font-mono text-cyber-neonGreen font-semibold">
+                <span className="text-[10px] font-mono text-cyber-neonGreen font-semibold tabular-nums">
                   ⚡ {data.cameraFps} FPS
                 </span>
               )}
@@ -111,8 +111,8 @@ export const TelemetryPanel = ({ data, isOnline }: TelemetryPanelProps) => {
             }`} />
         </div>
         <div className="grid grid-cols-3 items-center gap-4">
-          <div className="col-span-1">
-            <span className="text-3xl font-bold font-mono tracking-tight text-white">
+          <div className="col-span-1 flex items-baseline">
+            <span className="text-3xl font-bold font-mono tracking-tight text-white tabular-nums w-20 inline-block text-right">
               {isOnline ? data.distance.toFixed(1) : '---'}
             </span>
             <span className="text-xs text-gray-400 font-mono ml-1">cm</span>
@@ -121,7 +121,7 @@ export const TelemetryPanel = ({ data, isOnline }: TelemetryPanelProps) => {
             <div className="w-full h-2.5 bg-black/50 rounded-full overflow-hidden border border-white/5 relative">
               <div
                 style={{ width: `${isOnline ? Math.min(100, (data.distance / 150) * 100) : 0}%` }}
-                className={`h-full rounded-full transition-all duration-300 ${isCriticalDistance ? 'bg-cyber-neonRed' : isWarningDistance ? 'bg-cyber-neonYellow' : 'bg-cyber-neonBlue'
+                className={`h-full rounded-full transition-all duration-200 ease-linear ${isCriticalDistance ? 'bg-cyber-neonRed' : isWarningDistance ? 'bg-cyber-neonYellow' : 'bg-cyber-neonBlue'
                   }`}
               ></div>
             </div>
@@ -139,7 +139,7 @@ export const TelemetryPanel = ({ data, isOnline }: TelemetryPanelProps) => {
         <div className="flex items-center space-x-1.5">
           <Cpu className="w-3.5 h-3.5 text-cyber-neonBlue" />
           <span>Độ trễ RTT:</span>
-          <span className={`font-bold ${isOnline && data.latency < 50 ? 'text-cyber-neonGreen' : isOnline && data.latency < 150 ? 'text-cyber-neonYellow' : 'text-cyber-neonRed'
+          <span className={`font-bold tabular-nums w-12 inline-block ${isOnline && data.latency < 50 ? 'text-cyber-neonGreen' : isOnline && data.latency < 150 ? 'text-cyber-neonYellow' : 'text-cyber-neonRed'
             }`}>
             {isOnline ? `${data.latency}ms` : '---'}
           </span>
@@ -147,7 +147,7 @@ export const TelemetryPanel = ({ data, isOnline }: TelemetryPanelProps) => {
         <div className="flex items-center space-x-1.5">
           <Flame className="w-3.5 h-3.5 text-cyber-neonYellow" />
           <span>Nhiệt độ xe:</span>
-          <span className="font-bold text-white">
+          <span className="font-bold text-white tabular-nums w-12 inline-block">
             {isOnline ? `${data.temperature.toFixed(1)}°C` : '---'}
           </span>
         </div>

@@ -32,8 +32,6 @@ interface FPVCockpitViewProps {
   realFps: number;
   isDemoMode: boolean;
   setIsDemoMode: (mode: boolean) => void;
-  isMouseSteerActive: boolean;
-  setIsMouseSteerActive: React.Dispatch<React.SetStateAction<boolean>>;
   audioState: 'off' | 'connecting' | 'playing' | 'error';
   audioRef: React.RefObject<HTMLAudioElement | null>;
   toggleAudio: () => void;

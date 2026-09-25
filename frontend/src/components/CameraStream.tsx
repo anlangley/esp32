@@ -7,7 +7,6 @@ interface CameraStreamProps {
   config: CameraConfig;
   onChangeConfig: (newConfig: CameraConfig) => void;
   isCollisionWarning: boolean;
-  onDriveCommand?: (cmd: { x: number; y: number }) => void;
   onCameraStatsChange?: (stats: { fps: number; rssi: number; isOnline: boolean }) => void;
   driveCommand?: { x: number; y: number; speedLimit: number };
   onTelemetryUpdate?: (telemetryPartial: Partial<TelemetryData>) => void;
@@ -20,7 +19,6 @@ export const CameraStream = ({
   config,
   onChangeConfig,
   isCollisionWarning,
-  onDriveCommand,
   onCameraStatsChange,
   driveCommand,
   onTelemetryUpdate,
@@ -95,24 +93,7 @@ export const CameraStream = ({
     setRotation(prev => ((prev + 90) % 360) as 0 | 90 | 180 | 270);
   };
   
-  // Mouse Steering State
-  const [isMouseSteerActive, setIsMouseSteerActive] = useState(false);
-  const [isHovering, setIsHovering] = useState(false);
-  const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
-  const lastEmitTime = useRef(0);
 
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
-      if (e.key === '1' || e.code === 'Digit1' || e.code === 'Numpad1') {
-        e.preventDefault();
-        setIsMouseSteerActive(prev => !prev);
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, []);
 
   // Đo đạc tín hiệu IP Camera thực tế (Ping RSSI & FPS)
   const [realFps, setRealFps] = useState(0);
@@ -190,42 +171,7 @@ export const CameraStream = ({
     };
   }, [ip, port, path, errorCount, onCameraStatsChange]);
 
-  const handleMouseEnter = () => {
-    setIsHovering(true);
-  };
 
-  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    const isTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0 || window.innerWidth < 768;
-    if (isTouch || !isHovering || !isMouseSteerActive || !onDriveCommand) return;
-
-    const now = Date.now();
-    if (now - lastEmitTime.current < 40) return;
-    lastEmitTime.current = now;
-
-    const rect = e.currentTarget.getBoundingClientRect();
-    const width = rect.width;
-    const height = rect.height;
-
-    if (width <= 0 || height <= 0) return;
-
-    const centerX = rect.left + width / 2;
-    let relX = (e.clientX - centerX) / (width / 2);
-    relX = Math.max(-1, Math.min(1, relX));
-
-    if (Math.abs(relX) < 0.05) relX = 0;
-    relX = Math.round(relX * 100) / 100;
-
-    setMousePos({ x: relX, y: 0 });
-    onDriveCommand({ x: relX, y: 0 });
-  };
-
-  const handleMouseLeave = () => {
-    setIsHovering(false);
-    setMousePos({ x: 0, y: 0 });
-    if (isMouseSteerActive && onDriveCommand) {
-      onDriveCommand({ x: 0, y: 0 });
-    }
-  };
 
   useEffect(() => {
     setStreamUrl(`http://${ip}:${port}${path}`);
@@ -320,26 +266,7 @@ export const CameraStream = ({
             <span>{isDemoMode ? 'THÁO DEMO' : '🎮 DEMO'}</span>
           </button>
 
-          {/* Mouse Steering Status Badge */}
-          <button
-            onClick={() => {
-              const nextState = !isMouseSteerActive;
-              setIsMouseSteerActive(nextState);
-              if (!nextState && onDriveCommand) {
-                setMousePos({ x: 0, y: 0 });
-                onDriveCommand({ x: 0, y: 0 });
-              }
-            }}
-            className={`text-[10px] font-mono px-2 py-0.5 rounded border transition-colors flex items-center space-x-1 ${
-              isMouseSteerActive 
-                ? 'bg-cyber-neonGreen/10 border-cyber-neonGreen/40 text-cyber-neonGreen shadow-[0_0_10px_rgba(57,255,20,0.2)]' 
-                : 'bg-gray-800/80 border-gray-600 text-gray-400'
-            }`}
-            title="Bật/Tắt chế độ lái xe bằng di chuyển chuột (Phím 1)"
-          >
-            <span className={`w-1.5 h-1.5 rounded-full mr-1 ${isMouseSteerActive ? 'bg-cyber-neonGreen animate-ping' : 'bg-gray-500'}`}></span>
-            LÁI CHUỘT [PHÍM 1]: {isMouseSteerActive ? 'BẬT' : 'TẮT'}
-          </button>
+
         </div>
 
         <div className="flex items-center space-x-2">
@@ -441,35 +368,18 @@ export const CameraStream = ({
       {isDemoMode ? (
         <CarSimulatorGame
           driveCommand={driveCommand || { x: 0, y: 0, speedLimit: 80 }}
-          onDriveCommand={onDriveCommand}
           onTelemetryUpdate={onTelemetryUpdate}
           isCollisionWarning={isCollisionWarning}
-          isMouseSteerActive={isMouseSteerActive}
         />
       ) : (
         <div 
-          onMouseEnter={handleMouseEnter}
-          onMouseMove={handleMouseMove} 
-          onMouseLeave={handleMouseLeave}
-          className="w-full h-full bg-black/90 flex items-center justify-center scanlines relative cursor-crosshair group overflow-hidden"
+          className="w-full h-full bg-black/90 flex items-center justify-center scanlines relative group overflow-hidden"
         >
           {/* Overlay HUD - Target Crosshair */}
           <div className="absolute inset-0 pointer-events-none z-10">
             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-10 h-10 border border-cyber-neonBlue/30 rounded-full flex items-center justify-center">
               <div className="w-1.5 h-1.5 bg-cyber-neonBlue/80 rounded-full"></div>
             </div>
-
-            {isMouseSteerActive && (mousePos.x !== 0 || mousePos.y !== 0) && (
-              <div 
-                className="absolute w-8 h-8 -ml-4 -mt-4 border-2 border-cyber-neonGreen rounded-full flex items-center justify-center transition-transform duration-75 shadow-[0_0_15px_#39ff14]"
-                style={{
-                  left: `${50 + mousePos.x * 50}%`,
-                  top: `${50 - mousePos.y * 50}%`,
-                }}
-              >
-                <div className="w-2 h-2 bg-cyber-neonGreen rounded-full animate-ping"></div>
-              </div>
-            )}
           </div>
 
           {/* Warning Indicator */}

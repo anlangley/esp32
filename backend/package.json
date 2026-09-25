@@ -11,10 +11,16 @@
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
+    "aedes": "^1.2.0",
+    "bcrypt": "^6.0.0",
+    "coap": "^1.6.0",
     "cors": "^2.8.5",
     "dotenv": "^16.4.7",
     "express": "^4.21.2",
     "google-tts-api": "^2.0.2",
+    "jsonwebtoken": "^9.0.3",
+    "mqtt": "^5.16.0",
+    "mssql": "^12.7.2",
     "socket.io": "^4.8.1",
     "socket.io-client": "^4.8.1"
   },

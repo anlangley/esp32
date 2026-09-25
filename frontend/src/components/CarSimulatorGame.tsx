@@ -4,10 +4,8 @@ import type { TelemetryData } from '../types/control';
 
 interface CarSimulatorGameProps {
   driveCommand: { x: number; y: number; speedLimit: number };
-  onDriveCommand?: (cmd: { x: number; y: number }) => void;
   onTelemetryUpdate?: (telemetryPartial: Partial<TelemetryData>) => void;
   isCollisionWarning?: boolean;
-  isMouseSteerActive?: boolean;
 }
 
 interface Obstacle {
@@ -31,9 +29,7 @@ interface Particle {
 
 export const CarSimulatorGame = ({
   driveCommand,
-  onDriveCommand,
   onTelemetryUpdate,
-  isMouseSteerActive = false,
 }: CarSimulatorGameProps) => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const animationFrameId = useRef<number | null>(null);
@@ -65,7 +61,6 @@ export const CarSimulatorGame = ({
 
   const particlesRef = useRef<Particle[]>([]);
   const lastTimeRef = useRef<number>(performance.now());
-  const mousePosRef = useRef<{ x: number; y: number; active: boolean }>({ x: 0, y: 0, active: false });
 
   // Map & Obstacles Setup
   const obstaclesRef = useRef<Obstacle[]>([
@@ -155,35 +150,7 @@ export const CarSimulatorGame = ({
     return { minDistance, cmDistance };
   };
 
-  // Canvas Mouse Steering Handler
-  const handleCanvasMouseMove = (e: React.MouseEvent<HTMLCanvasElement>) => {
-    if (!isMouseSteerActive) {
-      mousePosRef.current.active = false;
-      return;
-    }
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const rect = canvas.getBoundingClientRect();
-    const width = rect.width;
-    
-    // Calculate normalized X offset (-1.0 to 1.0) relative to canvas center
-    const centerX = rect.left + width / 2;
-    let relX = (e.clientX - centerX) / (width / 2);
-    relX = Math.max(-1, Math.min(1, relX));
-    if (Math.abs(relX) < 0.05) relX = 0;
 
-    mousePosRef.current = { x: relX, y: 0, active: true };
-    if (onDriveCommand) {
-      onDriveCommand({ x: relX, y: driveCommand.y });
-    }
-  };
-
-  const handleCanvasMouseLeave = () => {
-    mousePosRef.current.active = false;
-    if (isMouseSteerActive && onDriveCommand) {
-      onDriveCommand({ x: 0, y: 0 });
-    }
-  };
 
   // Keep a realtime ref of driveCommand to prevent stale closures in requestAnimationFrame loop
   const driveCommandRef = useRef(driveCommand);
@@ -215,9 +182,7 @@ export const CarSimulatorGame = ({
       let inputX = currentCmd.x;
       let inputY = currentCmd.y;
 
-      if (isMouseSteerActive && mousePosRef.current.active && Math.abs(mousePosRef.current.x) > 0.05) {
-        inputX = mousePosRef.current.x;
-      }
+
 
       // Apply speed limit scaling factor (10% to 100%)
       const speedFactor = (currentCmd.speedLimit || 80) / 100;
@@ -562,7 +527,7 @@ export const CarSimulatorGame = ({
         cancelAnimationFrame(animationFrameId.current);
       }
     };
-  }, [driveCommand, onDriveCommand, onTelemetryUpdate]);
+  }, [driveCommand, onTelemetryUpdate]);
 
   return (
     <div className="relative w-full h-full min-h-[360px] flex flex-col items-center justify-center overflow-hidden">
@@ -594,9 +559,7 @@ export const CarSimulatorGame = ({
       {/* Main HTML5 Physics Canvas */}
       <canvas
         ref={canvasRef}
-        onMouseMove={handleCanvasMouseMove}
-        onMouseLeave={handleCanvasMouseLeave}
-        className="w-full h-full object-cover cursor-crosshair"
+        className="w-full h-full object-cover"
       />
 
       {/* Bottom Floating Telemetry HUD */}

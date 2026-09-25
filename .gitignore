@@ -17,6 +17,8 @@ out/
 .env
 .env.*
 !.env.example
+config_secret.h
+!config_secret.h.example
 
 # IDEs, Editors & OS Files
 .vs/

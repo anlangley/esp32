@@ -187,6 +187,9 @@ static void taskNetworkAndTelemetry(void *pvParameters) {
       telemetry.rssi             = WiFi.RSSI();
       telemetry.speed            = speedVal;
       telemetry.latency          = 12;
+      telemetry.isRcMode         = g_rcState.isRcMode;
+      telemetry.rcThrottle       = g_rcState.ch3;
+      telemetry.rcSteer          = g_rcState.ch1;
 
       sendTelemetry(telemetry);
     }

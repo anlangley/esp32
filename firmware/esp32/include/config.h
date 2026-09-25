@@ -4,10 +4,32 @@
 #include <Arduino.h>
 #include <WiFi.h>
 
+// ================= ĐỊNH DANH THIẾT BỊ XE IOT (BẢO MẬT PHẦN CỨNG) =================
+#if __has_include("config_secret.h")
+  #include "config_secret.h"
+#endif
+
+// Các giá trị mặc định mẫu khi push lên Git (Không bao giờ ghi đè bí mật thật)
+#ifndef VEHICLE_CODE
+  #define VEHICLE_CODE "YOUR_CAR_CODE"
+#endif
+
+#ifndef VEHICLE_PIN
+  #define VEHICLE_PIN  "YOUR_PIN_CODE"
+#endif
+
+#ifndef SECRET_WIFI_SSID
+  #define SECRET_WIFI_SSID "YOUR_WIFI_SSID"
+#endif
+
+#ifndef SECRET_WIFI_PASS
+  #define SECRET_WIFI_PASS "YOUR_WIFI_PASS"
+#endif
+
 // ================= CẤU HÌNH MẠNG & SERVER =================
-const char* const WIFI_SSID = "FPT Bao An 2.4";
-const char* const WIFI_PASS = "anhquynh1";
-const char* const WS_HOST   = "192.168.1.23"; // IP mặc định dự phòng nếu không tìm thấy UDP
+const char* const WIFI_SSID = SECRET_WIFI_SSID;
+const char* const WIFI_PASS = SECRET_WIFI_PASS;
+const char* const WS_HOST   = "192.168.1.22"; // IP mặc định dự phòng của máy chủ nếu không tìm thấy UDP
 const int         WS_PORT   = 3000;
 const int         UDP_DISCOVERY_PORT = 41234;
 
@@ -98,6 +120,9 @@ struct TelemetryData {
   int rssi;
   int speed;
   int latency;
+  bool isRcMode;
+  int rcThrottle;
+  int rcSteer;
 };
 
 #endif // CONFIG_H

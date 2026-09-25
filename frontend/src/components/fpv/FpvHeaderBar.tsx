@@ -4,6 +4,7 @@ import {
   ShieldAlert, Target
 } from 'lucide-react';
 import type { TelemetryData } from '../../types/control';
+import { useAuth } from '../../contexts/AuthContext';
 
 interface FpvHeaderBarProps {
   isOnline: boolean;
@@ -46,6 +47,9 @@ export function FpvHeaderBar({
   isFollowMode = false,
   toggleFollowMode,
 }: FpvHeaderBarProps) {
+  const { activeVehicle } = useAuth();
+  const isRealCar = !!activeVehicle && activeVehicle.vehicleCode.toUpperCase() !== 'CAR-A1B2C3';
+
   return (
     <div className="relative z-10 p-3 sm:p-4 flex items-center justify-between pointer-events-auto bg-gradient-to-b from-black/80 via-black/40 to-transparent">
       {/* LEFT: Exit FPV & Connection Status */}
@@ -61,17 +65,17 @@ export function FpvHeaderBar({
         <button
           onClick={() => setIsDemoMode(!isDemoMode)}
           className={`flex items-center space-x-2 border px-3 py-1.5 rounded-xl backdrop-blur-md transition-all active:scale-95 cursor-pointer ${
-            isOnline
-              ? 'bg-black/50 border-white/10'
-              : isDemoMode
-              ? 'bg-amber-500/20 border-amber-500 shadow-[0_0_15px_rgba(245,158,11,0.4)]'
-              : 'bg-black/50 border-red-500/50'
+            isRealCar
+              ? isOnline
+                ? 'bg-cyan-500/20 border-cyan-400 shadow-[0_0_15px_rgba(0,240,255,0.3)]'
+                : 'bg-black/50 border-red-500/50'
+              : 'bg-amber-500/20 border-amber-500 shadow-[0_0_15px_rgba(245,158,11,0.4)]'
           }`}
-          title="Bật/Tắt chế độ Xe Mô phỏng Demo"
+          title={isDemoMode ? 'Đang bật mô phỏng 2D (Nhấn để tắt demo)' : 'Nhấn để bật mô phỏng 2D'}
         >
-          <div className={`w-2.5 h-2.5 rounded-full ${isOnline ? 'bg-cyber-neonGreen animate-pulse shadow-[0_0_10px_#39ff14]' : isDemoMode ? 'bg-amber-400 animate-pulse' : 'bg-red-500'}`} />
+          <div className={`w-2.5 h-2.5 rounded-full ${isRealCar ? (isOnline ? 'bg-cyber-neonGreen animate-pulse shadow-[0_0_10px_#39ff14]' : 'bg-red-500') : 'bg-amber-400 animate-pulse'}`} />
           <span className="text-xs font-bold font-mono text-white">
-            {isOnline ? 'ESP32 ONLINE' : isDemoMode ? 'XE MÔ PHỎNG (DEMO)' : 'DISCONNECTED'}
+            {isRealCar ? (isOnline ? 'XE THẬT ONLINE' : 'XE THẬT OFFLINE') : 'DEMO (CAR-A1B2C3)'}
           </span>
         </button>
       </div>

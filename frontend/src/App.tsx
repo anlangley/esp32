@@ -4,12 +4,13 @@ import { DesktopDashboardView } from './views/DesktopDashboardView';
 import { useSystemLogs } from './hooks/useSystemLogs';
 import { useCarWebSocket } from './hooks/useCarWebSocket';
 import { useKeyboardDrive } from './hooks/useKeyboardDrive';
-import { useMouseSteering } from './hooks/useMouseSteering';
 import { useFpvJoystick } from './hooks/useFpvJoystick';
 import { useCameraPing } from './hooks/useCameraPing';
 import { useAudioStream } from './hooks/useAudioStream';
 import { useFullscreen } from './hooks/useFullscreen';
 import { useVoiceAgent } from './hooks/useVoiceAgent';
+import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { ProtectedRoute } from './components/ProtectedRoute';
 import type { CameraConfig, TelemetryData } from './types/control';
 
 const DEFAULT_CAMERA_CONFIG: CameraConfig = {
@@ -20,12 +21,21 @@ const DEFAULT_CAMERA_CONFIG: CameraConfig = {
   audioPath: '/audio.aac',
 };
 
-export default function App() {
+function CarDashboard() {
+  const { activeVehicle } = useAuth();
+
   // ==================== APP-LEVEL STATE ====================
   const [cameraConfig, setCameraConfig] = useState<CameraConfig>(DEFAULT_CAMERA_CONFIG);
   const [speedLimit, setSpeedLimit] = useState(80);
-  const [isDemoMode, setIsDemoMode] = useState(false);
+  const [isDemoMode, setIsDemoMode] = useState(() => activeVehicle?.vehicleCode === 'CAR-A1B2C3');
   const [isQrModalOpen, setIsQrModalOpen] = useState(false);
+
+  // Tự động đồng bộ isDemoMode khi activeVehicle thay đổi
+  useEffect(() => {
+    if (activeVehicle) {
+      setIsDemoMode(activeVehicle.vehicleCode.toUpperCase() === 'CAR-A1B2C3');
+    }
+  }, [activeVehicle]);
 
   // FPV Fullscreen Cockpit Mode state (Auto-active on mobile or when user clicks button on PC)
   const [isFpvMode, setIsFpvMode] = useState(() => {
@@ -37,9 +47,8 @@ export default function App() {
 
   // ==================== CUSTOM HOOKS ====================
   const { logs, addLog, clearLogs, terminalEndRef } = useSystemLogs();
-  const { isOnline, telemetry, setTelemetry, currentDriveCmd, handleCommandChange, toggleConnection, isFollowMode, toggleFollowMode, socketRef } = useCarWebSocket(addLog);
+  const { isOnline, telemetry, setTelemetry, currentDriveCmd, handleCommandChange, toggleConnection, isFollowMode, toggleFollowMode, socketRef } = useCarWebSocket(addLog, activeVehicle);
   useKeyboardDrive(handleCommandChange, speedLimit);
-  const { isMouseSteerActive, setIsMouseSteerActive } = useMouseSteering(handleCommandChange, speedLimit);
   const { isDragging, joystickCoords, joystickRef, handleJoystickStart } = useFpvJoystick(handleCommandChange, speedLimit);
   const { realFps, realCameraRssi } = useCameraPing(cameraConfig, isDemoMode, setTelemetry);
   const { audioState, audioRef, toggleAudio } = useAudioStream(cameraConfig);
@@ -79,10 +88,7 @@ export default function App() {
     return () => window.removeEventListener('keydown', blockKeyboardScroll, { capture: true });
   }, []);
 
-  // ==================== WRAPPER CALLBACKS ====================
-  const handleMouseDrive = useCallback((cmd: { x: number; y: number }) => {
-    handleCommandChange({ x: cmd.x, y: cmd.y, speedLimit });
-  }, [handleCommandChange, speedLimit]);
+
 
   const handleCameraConfigChange = useCallback((newConfig: CameraConfig) => {
     setCameraConfig(newConfig);
@@ -121,8 +127,6 @@ export default function App() {
         realFps={realFps}
         isDemoMode={isDemoMode}
         setIsDemoMode={setIsDemoMode}
-        isMouseSteerActive={isMouseSteerActive}
-        setIsMouseSteerActive={setIsMouseSteerActive}
         audioState={audioState}
         audioRef={audioRef}
         toggleAudio={toggleAudio}
@@ -154,7 +158,6 @@ export default function App() {
       terminalEndRef={terminalEndRef}
       addLog={addLog}
       handleCommandChange={handleCommandChange}
-      handleMouseDrive={handleMouseDrive}
       handleCameraConfigChange={handleCameraConfigChange}
       handleCameraStatsChange={handleCameraStatsChange}
       handleDemoTelemetryUpdate={handleDemoTelemetryUpdate}
@@ -170,5 +173,15 @@ export default function App() {
       toggleFollowMode={toggleFollowMode}
       socketRef={socketRef}
     />
+  );
+}
+
+export default function App() {
+  return (
+    <AuthProvider>
+      <ProtectedRoute>
+        <CarDashboard />
+      </ProtectedRoute>
+    </AuthProvider>
   );
 }

@@ -146,10 +146,16 @@ void initNetworkManager(ControlCommand &cmdState) {
   });
   ArduinoOTA.begin();
 
-  // Khởi tạo WebSocket Client kết nối đến Server IP bằng mảng char static
+  // Khởi tạo WebSocket Client kết nối đến Server IP kèm thông tin mã xe và MAC Address (GĐ 4)
   static char finalIpBuf[32];
   snprintf(finalIpBuf, sizeof(finalIpBuf), "%s", targetServerIp);
-  webSocket.begin(finalIpBuf, WS_PORT, "/socket.io/?EIO=4&transport=websocket&role=device");
+
+  String mac = WiFi.macAddress();
+  static char wsPathBuf[160];
+  snprintf(wsPathBuf, sizeof(wsPathBuf), "/socket.io/?EIO=4&transport=websocket&role=device&vehicle_code=%s&hardware_id=%s", VEHICLE_CODE, mac.c_str());
+  Serial.printf("[WS] Đăng ký xe: Mã [%s] | MAC [%s]\n", VEHICLE_CODE, mac.c_str());
+
+  webSocket.begin(finalIpBuf, WS_PORT, wsPathBuf);
   webSocket.onEvent(webSocketEvent);
   webSocket.setReconnectInterval(5000);
 }
@@ -171,16 +177,19 @@ void handleNetworkLoop() {
 void sendTelemetry(const TelemetryData &data) {
   if (WiFi.status() != WL_CONNECTED) return;
 
-  char packetBuf[256];
+  char packetBuf[320];
   int len = snprintf(packetBuf, sizeof(packetBuf),
-    "42[\"telemetry_data\",{\"batteryPercentage\":%d,\"batteryVoltage\":%.2f,\"distance\":%.1f,\"temperature\":%.1f,\"rssi\":%d,\"speed\":%d,\"latency\":%d}]",
+    "42[\"telemetry_data\",{\"batteryPercentage\":%d,\"batteryVoltage\":%.2f,\"distance\":%.1f,\"temperature\":%.1f,\"rssi\":%d,\"speed\":%d,\"latency\":%d,\"isRcMode\":%s,\"rcThrottle\":%d,\"rcSteer\":%d}]",
     (int)data.batteryPercentage,
     data.batteryVoltage,
     data.distance,
     data.temperature,
     data.rssi,
     data.speed,
-    data.latency
+    data.latency,
+    data.isRcMode ? "true" : "false",
+    data.rcThrottle,
+    data.rcSteer
   );
 
   if (len > 0 && len < (int)sizeof(packetBuf)) {

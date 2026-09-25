@@ -1,4 +1,5 @@
 export interface TelemetryData {
+  protocol?: string;
   batteryPercentage: number;
   batteryVoltage: number;
   distance: number; // Ultrasonic sensor value in cm
@@ -8,6 +9,9 @@ export interface TelemetryData {
   latency: number; // Network round-trip latency in ms
   cameraFps?: number;
   cameraRssi?: number;
+  isRcMode?: boolean; // Trạng thái lái bằng tay cầm điều khiển vật lý qua S.BUS
+  rcThrottle?: number; // Độ rộng xung PWM ga kênh 3 (1000 - 2000us)
+  rcSteer?: number; // Độ rộng xung PWM hướng lái kênh 1 (1000 - 2000us)
 }
 
 export interface ControlCommand {
