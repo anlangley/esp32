@@ -1,7 +1,9 @@
 import { useState, useEffect, useRef } from 'react';
-import { Camera, Settings, RefreshCw, AlertTriangle, RotateCw, Volume2, VolumeX, Volume1, Loader2, Zap, Gamepad2 } from 'lucide-react';
+import { Camera, Settings, RefreshCw, AlertTriangle, RotateCw, Volume2, VolumeX, Volume1, Loader2, Zap, Gamepad2, Bot } from 'lucide-react';
 import type { CameraConfig, TelemetryData } from '../types/control';
 import { CarSimulatorGame } from './CarSimulatorGame';
+import { useVisionWebSocket } from '../hooks/useVisionWebSocket';
+import { DetectionOverlay } from './DetectionOverlay';
 
 interface CameraStreamProps {
   config: CameraConfig;
@@ -45,6 +47,37 @@ export const CameraStream = ({
   const [showVolumeSlider, setShowVolumeSlider] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  // Python AI Vision State (YOLOv8 + OpenCV qua WebSocket port 8000)
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const [containerSize, setContainerSize] = useState({ width: 0, height: 0 });
+  const {
+    isEnabled: isVisionEnabled,
+    setIsEnabled: setIsVisionEnabled,
+    isConnected: isVisionConnected,
+    frameSize,
+    detections,
+    lane,
+    collision,
+    inferenceMs,
+  } = useVisionWebSocket();
+
+  // ResizeObserver cập nhật kích thước container để scale bounding box
+  useEffect(() => {
+    if (!containerRef.current) return;
+    const updateSize = () => {
+      if (containerRef.current) {
+        setContainerSize({
+          width: containerRef.current.clientWidth,
+          height: containerRef.current.clientHeight,
+        });
+      }
+    };
+    updateSize();
+    const observer = new ResizeObserver(updateSize);
+    observer.observe(containerRef.current);
+    return () => observer.disconnect();
+  }, []);
 
   const toggleAudio = () => {
     if (!audioRef.current) return;
@@ -92,7 +125,7 @@ export const CameraStream = ({
   const handleRotate = () => {
     setRotation(prev => ((prev + 90) % 360) as 0 | 90 | 180 | 270);
   };
-  
+
 
 
   // Đo đạc tín hiệu IP Camera thực tế (Ping RSSI & FPS)
@@ -107,7 +140,7 @@ export const CameraStream = ({
     const measureRealCameraPing = () => {
       const startTime = Date.now();
       const testImg = new Image();
-      
+
       const timeoutId = setTimeout(() => {
         if (!isMounted) return;
         testImg.src = '';
@@ -177,11 +210,32 @@ export const CameraStream = ({
     setStreamUrl(`http://${ip}:${port}${path}`);
   }, [ip, port, path]);
 
+  // Đồng bộ camera URL sang Python khi khởi động (nếu IP hợp lệ)
+  useEffect(() => {
+    if (!ip || ip.split('.').length < 4) return;
+    const fullCameraUrl = `http://${ip}:${port}${path}`;
+    const visionHost = typeof window !== 'undefined' ? `${window.location.hostname}:8000` : 'localhost:8000';
+    fetch(`http://${visionHost}/api/set_camera_url`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ camera_url: fullCameraUrl }),
+    }).catch(() => {});
+  }, []);
+
   const handleSave = (e: React.FormEvent) => {
     e.preventDefault();
     onChangeConfig({ ip, port, path, type: config.type || 'mjpeg', audioPath });
     setShowSettings(false);
     setErrorCount(0);
+
+    // Đồng bộ camera URL sang Python Vision Server chỉ khi người dùng bấm LƯU
+    const fullCameraUrl = `http://${ip}:${port}${path}`;
+    const visionHost = typeof window !== 'undefined' ? `${window.location.hostname}:8000` : 'localhost:8000';
+    fetch(`http://${visionHost}/api/set_camera_url`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ camera_url: fullCameraUrl }),
+    }).catch(() => {});
   };
 
   const handleImageError = () => {
@@ -198,14 +252,13 @@ export const CameraStream = ({
       audioRef.current.pause();
       const liveAudioUrl = `http://${ip}:${port}${audioPath}?live=${Date.now()}`;
       audioRef.current.src = liveAudioUrl;
-      audioRef.current.play().catch(() => {});
+      audioRef.current.play().catch(() => { });
     }
   };
 
   return (
-    <div className={`relative w-full aspect-video lg:aspect-none min-h-[380px] lg:min-h-[495px] xl:min-h-[535px] rounded-xl overflow-hidden glass-panel-neon transition-all duration-300 ${
-      isCollisionWarning ? 'border-cyber-neonRed shadow-[0_0_30px_rgba(255,0,60,0.3)] animate-pulse-fast' : ''
-    }`}>
+    <div className={`relative w-full aspect-video lg:aspect-none min-h-[380px] lg:min-h-[495px] xl:min-h-[535px] rounded-xl overflow-hidden glass-panel-neon transition-all duration-300 ${isCollisionWarning ? 'border-cyber-neonRed shadow-[0_0_30px_rgba(255,0,60,0.3)] animate-pulse-fast' : ''
+      }`}>
       {/* Header Bar */}
       <div className="absolute top-0 left-0 right-0 z-20 flex flex-wrap justify-between items-center px-4 py-2 bg-gradient-to-b from-black/90 via-black/60 to-transparent gap-2">
         <div className="flex items-center space-x-2 flex-wrap gap-y-1">
@@ -213,26 +266,24 @@ export const CameraStream = ({
           <span className="text-xs font-semibold uppercase tracking-wider text-gray-200">
             {isDemoMode ? 'Mô phỏng Game 2D' : 'IP Camera Live Stream'}
           </span>
-          
+
           {/* Camera Stats Badges (FPS & RSSI) */}
           {!isDemoMode && (
             <div className="flex items-center space-x-1.5 ml-2">
-              <span className={`text-[10px] font-mono px-2 py-0.5 rounded border font-semibold ${
-                realFps >= 15 
-                  ? 'bg-cyber-neonGreen/10 border-cyber-neonGreen/40 text-cyber-neonGreen' 
-                  : realFps > 0 
+              <span className={`text-[10px] font-mono px-2 py-0.5 rounded border font-semibold ${realFps >= 15
+                  ? 'bg-cyber-neonGreen/10 border-cyber-neonGreen/40 text-cyber-neonGreen'
+                  : realFps > 0
                     ? 'bg-cyber-neonYellow/10 border-cyber-neonYellow/40 text-cyber-neonYellow'
                     : 'bg-cyber-neonRed/10 border-cyber-neonRed/40 text-cyber-neonRed'
-              }`}>
+                }`}>
                 ⚡ {realFps} FPS
               </span>
-              <span className={`text-[10px] font-mono px-2 py-0.5 rounded border font-semibold ${
-                realCameraRssi > -70 
-                  ? 'bg-cyber-neonBlue/10 border-cyber-neonBlue/40 text-cyber-neonBlue' 
-                  : realCameraRssi > -100 
+              <span className={`text-[10px] font-mono px-2 py-0.5 rounded border font-semibold ${realCameraRssi > -70
+                  ? 'bg-cyber-neonBlue/10 border-cyber-neonBlue/40 text-cyber-neonBlue'
+                  : realCameraRssi > -100
                     ? 'bg-cyber-neonYellow/10 border-cyber-neonYellow/40 text-cyber-neonYellow'
                     : 'bg-cyber-neonRed/10 border-cyber-neonRed/40 text-cyber-neonRed'
-              }`}>
+                }`}>
                 📡 CAM: {realCameraRssi > -100 ? `${realCameraRssi} dBm` : 'OFFLINE'}
               </span>
             </div>
@@ -255,18 +306,33 @@ export const CameraStream = ({
                 );
               }
             }}
-            className={`text-[10px] font-mono px-2 py-0.5 rounded border transition-all flex items-center space-x-1 font-bold ${
-              isDemoMode
+            className={`text-[10px] font-mono px-2 py-0.5 rounded border transition-all flex items-center space-x-1 font-bold ${isDemoMode
                 ? 'bg-purple-600/30 border-purple-400 text-purple-200 shadow-[0_0_15px_rgba(168,85,247,0.5)] animate-pulse'
                 : 'bg-purple-950/40 border-purple-500/40 text-purple-300 hover:bg-purple-900/40'
-            }`}
+              }`}
             title="Bấm để bật/tắt Game mô phỏng điều khiển xe 2D Canvas"
           >
             <Gamepad2 className={`w-3.5 h-3.5 ${isDemoMode ? 'text-purple-200 animate-bounce' : 'text-purple-400'}`} />
             <span>{isDemoMode ? 'THÁO DEMO' : '🎮 DEMO'}</span>
           </button>
 
-
+          {/* Nút Bật/Tắt AI Vision (Python YOLOv8) */}
+          <button
+            onClick={() => setIsVisionEnabled(!isVisionEnabled)}
+            className={`text-[10px] font-mono px-2 py-0.5 rounded border transition-all flex items-center space-x-1 font-bold ${
+              isVisionEnabled && isVisionConnected
+                ? 'bg-cyber-neonGreen/15 border-cyber-neonGreen/60 text-cyber-neonGreen shadow-[0_0_12px_rgba(57,255,20,0.3)]'
+                : isVisionEnabled
+                ? 'bg-cyber-neonYellow/20 border-cyber-neonYellow/60 text-cyber-neonYellow animate-pulse'
+                : 'bg-black/40 border-white/10 text-gray-500 hover:text-gray-300'
+            }`}
+            title="Bật/Tắt nhận diện vật thể AI YOLOv8 từ Python Vision Server"
+          >
+            <Bot className={`w-3.5 h-3.5 ${isVisionConnected ? 'text-cyber-neonGreen' : 'text-gray-400'}`} />
+            <span>
+              {isVisionEnabled ? (isVisionConnected ? `YOLO: ${inferenceMs}ms` : 'YOLO...') : 'YOLO: OFF'}
+            </span>
+          </button>
         </div>
 
         <div className="flex items-center space-x-2">
@@ -274,15 +340,14 @@ export const CameraStream = ({
           <div className="relative flex items-center space-x-1">
             <button
               onClick={toggleAudio}
-              className={`px-2.5 py-1 rounded transition-all flex items-center space-x-1.5 border font-mono text-[10px] font-bold ${
-                audioState === 'playing'
+              className={`px-2.5 py-1 rounded transition-all flex items-center space-x-1.5 border font-mono text-[10px] font-bold ${audioState === 'playing'
                   ? 'bg-cyber-neonGreen/15 border-cyber-neonGreen/60 text-cyber-neonGreen shadow-[0_0_15px_rgba(57,255,20,0.25)]'
                   : audioState === 'connecting'
                     ? 'bg-cyber-neonBlue/15 border-cyber-neonBlue/60 text-cyber-neonBlue animate-pulse'
                     : audioState === 'error'
                       ? 'bg-cyber-neonRed/15 border-cyber-neonRed/60 text-cyber-neonRed'
                       : 'bg-black/40 border-white/10 hover:bg-white/10 text-gray-400'
-              }`}
+                }`}
             >
               {audioState === 'connecting' && <Loader2 className="w-3.5 h-3.5 animate-spin text-cyber-neonBlue" />}
               {audioState === 'playing' && <Volume2 className="w-3.5 h-3.5 text-cyber-neonGreen" />}
@@ -301,11 +366,10 @@ export const CameraStream = ({
             {audioState === 'playing' && (
               <button
                 onClick={handleSyncAudio}
-                className={`px-1.5 py-1 rounded border transition-all flex items-center space-x-1 ${
-                  isSyncing
+                className={`px-1.5 py-1 rounded border transition-all flex items-center space-x-1 ${isSyncing
                     ? 'bg-cyber-neonYellow/30 border-cyber-neonYellow text-cyber-neonYellow animate-pulse'
                     : 'bg-black/60 border-cyber-neonGreen/40 text-cyber-neonGreen hover:bg-cyber-neonGreen/20 shadow-[0_0_8px_rgba(57,255,20,0.15)]'
-                }`}
+                  }`}
               >
                 <Zap className={`w-3 h-3 ${isSyncing ? 'animate-bounce text-cyber-neonYellow' : 'text-cyber-neonGreen'}`} />
                 <span className="text-[9px] font-mono font-bold uppercase">{isSyncing ? 'SYNCING...' : 'SYNC'}</span>
@@ -337,25 +401,24 @@ export const CameraStream = ({
             )}
           </div>
 
-          <button 
+          <button
             onClick={handleRotate}
-            className={`px-2 py-1 rounded transition-all flex items-center space-x-1 border ${
-              rotation > 0 
-                ? 'bg-cyber-neonGreen/10 border-cyber-neonGreen/40 text-cyber-neonGreen shadow-[0_0_10px_rgba(57,255,20,0.15)]' 
+            className={`px-2 py-1 rounded transition-all flex items-center space-x-1 border ${rotation > 0
+                ? 'bg-cyber-neonGreen/10 border-cyber-neonGreen/40 text-cyber-neonGreen shadow-[0_0_10px_rgba(57,255,20,0.15)]'
                 : 'bg-black/40 border-white/10 hover:bg-white/10 text-gray-300'
-            }`}
+              }`}
           >
             <RotateCw className="w-3.5 h-3.5" />
             <span className="text-[10px] font-mono font-bold">{rotation}°</span>
           </button>
 
-          <button 
+          <button
             onClick={handleRefresh}
             className="p-1 rounded hover:bg-white/10 text-gray-300 transition-colors"
           >
             <RefreshCw className="w-4 h-4" />
           </button>
-          <button 
+          <button
             onClick={() => setShowSettings(!showSettings)}
             className="p-1 rounded hover:bg-white/10 text-gray-300 transition-colors"
           >
@@ -372,9 +435,24 @@ export const CameraStream = ({
           isCollisionWarning={isCollisionWarning}
         />
       ) : (
-        <div 
+        <div
+          ref={containerRef}
           className="w-full h-full bg-black/90 flex items-center justify-center scanlines relative group overflow-hidden"
         >
+          {/* Detection Overlay từ Python YOLOv8 */}
+          {isVisionEnabled && isVisionConnected && (
+            <DetectionOverlay
+              detections={detections}
+              lane={lane}
+              collision={collision}
+              frameWidth={frameSize?.width || 640}
+              frameHeight={frameSize?.height || 480}
+              containerWidth={containerSize.width}
+              containerHeight={containerSize.height}
+              rotation={rotation}
+            />
+          )}
+
           {/* Overlay HUD - Target Crosshair */}
           <div className="absolute inset-0 pointer-events-none z-10">
             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-10 h-10 border border-cyber-neonBlue/30 rounded-full flex items-center justify-center">

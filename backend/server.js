@@ -88,6 +88,29 @@ app.get('/api/command', (req, res) => {
   res.status(200).json(latestCommand);
 });
 
+// REST API: Python Vision Server kích hoạt phanh khẩn cấp tự động khi có vật cản
+app.post('/api/control/emergency-brake', (req, res) => {
+  const { reason } = req.body || {};
+  console.warn(`🚨 [EMERGENCY BRAKE] Phanh khẩn cấp từ Python Vision: ${reason || 'Vật cản sát mũi xe'}`);
+
+  const stopCommand = { x: 0, y: 0, speedLimit: 0, emergency: true };
+  latestCommand = stopCommand;
+
+  // Gửi lệnh phanh qua MQTT & WebSocket tới ESP32
+  try {
+    aedes.publish({ topic: 'iotcar/command', payload: JSON.stringify(stopCommand) });
+  } catch {}
+
+  if (activeDeviceSocket) {
+    activeDeviceSocket.emit('drive_command', stopCommand);
+  }
+
+  // Báo động trên giao diện buồng lái Frontend
+  io.emit('system_warning', `🚨 Phanh khẩn cấp tự động: ${reason || 'Phát hiện vật cản phía trước!'}`);
+
+  res.json({ status: 'emergency_stop_triggered', reason });
+});
+
 const httpServer = createServer(app);
 const io = new Server(httpServer, {
   cors: {

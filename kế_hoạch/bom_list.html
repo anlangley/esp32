@@ -53,7 +53,7 @@
       margin-bottom: 5px;
     }
     .stat-value {
-      font-size: 22px;
+      font-size: 24px;
       font-weight: bold;
     }
     .green { color: var(--accent-green); }
@@ -74,7 +74,7 @@
       background-color: var(--panel);
       border-radius: 8px;
       overflow: hidden;
-      margin-bottom: 15px;
+      margin-bottom: 25px;
       border: 1px solid var(--border);
     }
     th, td {
@@ -104,10 +104,6 @@
       border-radius: 4px;
       font-family: monospace;
     }
-    .badge-warning {
-      color: #fb7185;
-      font-weight: bold;
-    }
   </style>
 </head>
 <body>
@@ -116,25 +112,150 @@
 
     <div class="summary-card">
       <div class="stat-item">
-        <div class="stat-title">🟢 ĐÃ CÓ SẴN</div>
-        <div class="stat-value green">650.000 đ</div>
+        <div class="stat-title">🟡 CẦN MUA THÊM (TOÀN BỘ XE)</div>
+        <div class="stat-value yellow">1.081.000 đ</div>
       </div>
       <div class="stat-item">
-        <div class="stat-title">🟡 CẦN MUA THÊM</div>
-        <div class="stat-value yellow">560.000 đ</div>
+        <div class="stat-title">🟢 DỤNG CỤ CÓ SẴN</div>
+        <div class="stat-value green">0 đ</div>
       </div>
       <div class="stat-item">
-        <div class="stat-title">💰 TỔNG HOÀN THIỆN</div>
-        <div class="stat-value blue">1.210.000 đ</div>
+        <div class="stat-title">💰 TỔNG CỘNG HOÀN THIỆN</div>
+        <div class="stat-value blue">1.081.000 đ</div>
       </div>
     </div>
 
-    <h2>1. Linh kiện ĐÃ CÓ SẴN (Đã chuẩn bị)</h2>
+    <h2>1. Linh kiện CẦN MUA THÊM (Shopee)</h2>
     <table>
       <thead>
         <tr>
           <th style="width: 50px;" class="center">STT</th>
           <th>Tên Linh Kiện</th>
+          <th style="width: 90px;" class="center">Số Lượng</th>
+          <th style="width: 110px;" class="right">Đơn Giá</th>
+          <th style="width: 110px;" class="right">Thành Tiền</th>
+          <th style="width: 190px;">Từ Khóa Shopee</th>
+          <th>Ghi Chú Quan Trọng</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="center bold">1</td>
+          <td>Tay điều khiển MC6C + Receiver MC7RB</td>
+          <td class="center">1 bộ</td>
+          <td class="right">550.000 đ</td>
+          <td class="right bold">550.000 đ</td>
+          <td><code>Tay điều khiển MC6C</code></td>
+          <td>Tay phát RC vật lý & Bộ thu S.BUS</td>
+        </tr>
+        <tr>
+          <td class="center bold">2</td>
+          <td>Combo ESP32 DevKit V1 + Board mở rộng G-V-S</td>
+          <td class="center">1 bộ</td>
+          <td class="right">125.000 đ</td>
+          <td class="right bold">125.000 đ</td>
+          <td><code>Combo ESP32 Shield</code></td>
+          <td>CP2102 30P + Mạch mở rộng cọc vặn vít GVS</td>
+        </tr>
+        <tr>
+          <td class="center bold">3</td>
+          <td>Combo Khung xe 4WD + 4 Động cơ & Bánh xe</td>
+          <td class="center">1 bộ</td>
+          <td class="right">180.000 đ</td>
+          <td class="right bold">180.000 đ</td>
+          <td><code>Khung xe robot 4 bánh</code></td>
+          <td>Khung 2 tầng + 4 motor TT vàng kèm bánh xe</td>
+        </tr>
+        <tr>
+          <td class="center bold">4</td>
+          <td>Mạch cầu H L298N</td>
+          <td class="center">1 mạch</td>
+          <td class="right">35.000 đ</td>
+          <td class="right bold">35.000 đ</td>
+          <td><code>Mạch cầu H L298N</code></td>
+          <td>Điều khiển tốc độ & chiều quay 4 động cơ</td>
+        </tr>
+        <tr>
+          <td class="center bold">5</td>
+          <td>Mạch hạ áp DC-DC LM2596</td>
+          <td class="center">1 mạch</td>
+          <td class="right">13.000 đ</td>
+          <td class="right bold">13.000 đ</td>
+          <td><code>Mạch giảm áp LM2596</code></td>
+          <td>Hạ áp Jack Balance 2S xuống 5V nuôi ESP32</td>
+        </tr>
+        <tr>
+          <td class="center bold">6</td>
+          <td>Pin LiPo 2S (7.4V - 8.4V)</td>
+          <td class="center">1 bộ</td>
+          <td class="right">100.000 đ</td>
+          <td class="right bold">100.000 đ</td>
+          <td><code>Pin LiPo 2S</code></td>
+          <td>Cấp nguồn chính cho động cơ & hệ thống xe</td>
+        </tr>
+        <tr>
+          <td class="center bold">7</td>
+          <td>Cảm biến siêu âm HC-SR04</td>
+          <td class="center">1 chiếc</td>
+          <td class="right">40.000 đ</td>
+          <td class="right bold">40.000 đ</td>
+          <td><code>HC-SR04 siêu âm</code></td>
+          <td>Đo khoảng cách vật cản tự động phanh</td>
+        </tr>
+        <tr>
+          <td class="center bold">8</td>
+          <td>Servo SG90 quay Camera</td>
+          <td class="center">1 chiếc</td>
+          <td class="right">15.000 đ</td>
+          <td class="right bold">15.000 đ</td>
+          <td><code>Servo SG90</code></td>
+          <td>Cắm thẳng hàng G-V-S GPIO 18</td>
+        </tr>
+        <tr>
+          <td class="center bold">9</td>
+          <td>Đốt phân áp 10k + 100k (Đo Pin ADC)</td>
+          <td class="center">1 bộ</td>
+          <td class="right">2.000 đ</td>
+          <td class="right bold">2.000 đ</td>
+          <td><code>Điện trở 10k 100k</code></td>
+          <td>Đo % Pin 2S gửi telemetry</td>
+        </tr>
+        <tr>
+          <td class="center bold">10</td>
+          <td>Dây cắm Dupont Đực - Cái & Cái - Cái</td>
+          <td class="center">2 vỉ</td>
+          <td class="right">7.000 đ</td>
+          <td class="right bold">14.000 đ</td>
+          <td><code>Dây dupont 20cm</code></td>
+          <td>Đấu nối cảm biến, S.BUS & L298N</td>
+        </tr>
+        <tr>
+          <td class="center bold">11</td>
+          <td>Băng nhám dính Velcro thắt Pin</td>
+          <td class="center">1 dây</td>
+          <td class="right">5.000 đ</td>
+          <td class="right bold">5.000 đ</td>
+          <td><code>Dây nhám Velcro thắt pin</code></td>
+          <td>Cố định Pin LiPo 2S tầng trên cùng</td>
+        </tr>
+        <tr>
+          <td class="center bold">12</td>
+          <td>Công tắc bập bênh nhỏ ON/OFF</td>
+          <td class="center">1 chiếc</td>
+          <td class="right">2.000 đ</td>
+          <td class="right bold">2.000 đ</td>
+          <td><code>Công tắc bập bênh nhỏ</code></td>
+          <td>Đóng / ngắt nguồn pin tổng</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h2>2. Dụng cụ / Vật tư CÓ SẴN (Không cần mua)</h2>
+    <table>
+      <thead>
+        <tr>
+          <th style="width: 50px;" class="center">STT</th>
+          <th>Tên Dụng Cụ</th>
           <th style="width: 100px;" class="center">Số Lượng</th>
           <th style="width: 120px;" class="right">Đơn Giá</th>
           <th style="width: 120px;" class="right">Thành Tiền</th>
@@ -144,126 +265,27 @@
       <tbody>
         <tr>
           <td class="center bold">1</td>
-          <td>Tay điều khiển MC6C (TX) + Receiver MC7RB (RX)</td>
+          <td>Mỏ hàn chì + Thiếc hàn</td>
           <td class="center">1 bộ</td>
-          <td class="right">550.000 đ</td>
-          <td class="right bold">550.000 đ</td>
-          <td>Tay phát RC vật lý & Bộ thu S.BUS</td>
+          <td class="right">0 đ</td>
+          <td class="right bold">0 đ</td>
+          <td>Có sẵn dùng hàn nối dây & cọc nguồn</td>
         </tr>
         <tr>
           <td class="center bold">2</td>
-          <td>Pin nguồn (Pin LiPo / 18650 2S)</td>
-          <td class="center">1 bộ</td>
-          <td class="right">100.000 đ</td>
-          <td class="right bold">100.000 đ</td>
-          <td>Cấp nguồn chính cho động cơ & hệ thống</td>
-        </tr>
-      </tbody>
-    </table>
-
-    <h2>2. Linh kiện CẦN MUA THÊM (Shopee)</h2>
-    <table>
-      <thead>
-        <tr>
-          <th style="width: 50px;" class="center">STT</th>
-          <th>Tên Linh Kiện</th>
-          <th style="width: 100px;" class="center">Số Lượng</th>
-          <th style="width: 120px;" class="right">Đơn Giá</th>
-          <th style="width: 120px;" class="right">Thành Tiền</th>
-          <th>Từ Khóa Shopee</th>
-          <th>Ghi Chú Quan Trọng</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td class="center bold">1</td>
-          <td>Khung xe Mica 4 bánh (4WD Chassis)</td>
-          <td class="center">1 bộ</td>
-          <td class="right">180.000 đ</td>
-          <td class="right bold">180.000 đ</td>
-          <td><code>Khung xe robot 4 bánh</code></td>
-          <td>Đế cố định động cơ, pin và bo mạch</td>
-        </tr>
-        <tr>
-          <td class="center bold">2</td>
-          <td>Combo ESP32 + Board mở rộng</td>
-          <td class="center">1 bộ</td>
-          <td class="right">140.000 đ</td>
-          <td class="right bold">140.000 đ</td>
-          <td><code>ESP32 Shield</code></td>
-          <td>Bộ não điều khiển trung tâm & Board mở rộng</td>
+          <td>Súng bắn keo nến (keo silicon)</td>
+          <td class="center">1 chiếc</td>
+          <td class="right">0 đ</td>
+          <td class="right bold">0 đ</td>
+          <td>Có sẵn dùng gắn cố định chi tiết</td>
         </tr>
         <tr>
           <td class="center bold">3</td>
-          <td>Mạch cầu H L298N</td>
-          <td class="center">1 mạch</td>
-          <td class="right">50.000 đ</td>
-          <td class="right bold">50.000 đ</td>
-          <td><code>Mạch L298N</code></td>
-          <td>Điều khiển tốc độ & chiều quay 4 động cơ</td>
-        </tr>
-        <tr>
-          <td class="center bold">4</td>
-          <td>Động cơ giảm tốc vàng + Bánh xe</td>
-          <td class="center">4 bộ</td>
-          <td class="right">20.000 đ</td>
-          <td class="right bold">80.000 đ</td>
-          <td><code>Động cơ giảm tốc TT</code></td>
-          <td>Động cơ truyền động lực cho 4 bánh</td>
-        </tr>
-        <tr>
-          <td class="center bold">5</td>
-          <td>Cảm biến siêu âm HC-SR04P (3.3V)</td>
-          <td class="center">1 chiếc</td>
-          <td class="right">40.000 đ</td>
-          <td class="right bold">40.000 đ</td>
-          <td><code>HC-SR04P 3.3V</code></td>
-          <td><span class="badge-warning">⚠️ LƯU Ý PHẢI MUA BẢN P</span> (dùng điện 3.3V)</td>
-        </tr>
-        <tr>
-          <td class="center bold">6</td>
-          <td>Mạch hạ áp DC-DC LM2596</td>
-          <td class="center">1 mạch</td>
-          <td class="right">30.000 đ</td>
-          <td class="right bold">30.000 đ</td>
-          <td><code>Mạch giảm áp LM2596</code></td>
-          <td>Hạ áp pin xuống 5V nuôi ESP32 & Receiver</td>
-        </tr>
-        <tr>
-          <td class="center bold">7</td>
-          <td>Mạch cảm biến đo điện áp 0-25V</td>
-          <td class="center">1 mạch</td>
-          <td class="right">8.000 đ</td>
-          <td class="right bold">8.000 đ</td>
-          <td><code>Cảm biến điện áp 0-25V</code></td>
-          <td>Đo điện áp pin gửi telemetry lên Web</td>
-        </tr>
-        <tr>
-          <td class="center bold">8</td>
-          <td>Dây cắm Dupont (Đực-Cái, Cái-Cái)</td>
-          <td class="center">1 bộ</td>
-          <td class="right">20.000 đ</td>
-          <td class="right bold">20.000 đ</td>
-          <td><code>Dây bus dupont 20cm</code></td>
-          <td>Nối tín hiệu các module cảm biến và board</td>
-        </tr>
-        <tr>
-          <td class="center bold">9</td>
-          <td>Đầu kẹp điện thoại (Tripod mount)</td>
-          <td class="center">1 chiếc</td>
-          <td class="right">10.000 đ</td>
-          <td class="right bold">10.000 đ</td>
-          <td><code>Đầu kẹp điện thoại tripod</code></td>
-          <td>Kẹp điện thoại làm camera hành trình</td>
-        </tr>
-        <tr>
-          <td class="center bold">10</td>
-          <td>Công tắc bập bênh nhỏ ON/OFF</td>
-          <td class="center">1 chiếc</td>
-          <td class="right">2.000 đ</td>
-          <td class="right bold">2.000 đ</td>
-          <td><code>Công tắc bập bênh nhỏ</code></td>
-          <td>Đóng / ngắt nguồn pin tổng</td>
+          <td>Băng dính cách điện / Băng dính 2 mặt</td>
+          <td class="center">1 cuộn</td>
+          <td class="right">0 đ</td>
+          <td class="right bold">0 đ</td>
+          <td>Có sẵn dùng bọc cách điện & chống chập</td>
         </tr>
       </tbody>
     </table>
