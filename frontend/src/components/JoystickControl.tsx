@@ -44,6 +44,9 @@ export const JoystickControl = ({
   // Keep track of the current values to avoid excessive re-emission
   const currentCommand = useRef<ControlCommand>({ x: 0, y: 0, speedLimit });
 
+  // Continuous Hold Ticker cho các nút bấm W, A, S, D trên giao diện web
+  const holdIntervalRef = useRef<any>(null);
+
   const updateCommand = useCallback((x: number, y: number) => {
     const clampedX = Math.max(-1, Math.min(1, x));
     const clampedY = Math.max(-1, Math.min(1, y));
@@ -71,6 +74,46 @@ export const JoystickControl = ({
       onCommandChange(currentCommand.current);
     }
   }, [speedLimit, onCommandChange]);
+
+  const startHoldCommand = useCallback((x: number, y: number) => {
+    if (holdIntervalRef.current) {
+      clearInterval(holdIntervalRef.current);
+      holdIntervalRef.current = null;
+    }
+
+    updateCommand(x, y);
+
+    // Bắt đầu vòng lặp ticker 50ms khi người dùng ấn giữ nút:
+    // Liên tục gửi lệnh để động cơ xe quay / chạy mượt mà đến khi người dùng nhả nút ra thì mới dừng,
+    // hoàn toàn không cần phải ấn nhấp nhả từng lần!
+    holdIntervalRef.current = setInterval(() => {
+      onCommandChange({ x, y, speedLimit });
+    }, 50);
+  }, [updateCommand, onCommandChange, speedLimit]);
+
+  const stopHoldCommand = useCallback(() => {
+    if (holdIntervalRef.current) {
+      clearInterval(holdIntervalRef.current);
+      holdIntervalRef.current = null;
+    }
+    updateCommand(0, 0);
+  }, [updateCommand]);
+
+  // Lắng nghe mouseup và touchend toàn cục để nếu người dùng rê chuột ra khỏi nút rồi nhả, xe vẫn dừng an toàn
+  useEffect(() => {
+    const handleGlobalEnd = () => {
+      if (holdIntervalRef.current) {
+        stopHoldCommand();
+      }
+    };
+    window.addEventListener('mouseup', handleGlobalEnd);
+    window.addEventListener('touchend', handleGlobalEnd);
+    return () => {
+      if (holdIntervalRef.current) clearInterval(holdIntervalRef.current);
+      window.removeEventListener('mouseup', handleGlobalEnd);
+      window.removeEventListener('touchend', handleGlobalEnd);
+    };
+  }, [stopHoldCommand]);
 
   // Cập nhật giao diện Cần Joystick khi có lệnh từ bên ngoài truyền vào
   useEffect(() => {
@@ -487,15 +530,14 @@ export const JoystickControl = ({
                 <div></div>
                 <button
                   tabIndex={-1}
-                  onMouseDown={(e) => { e.preventDefault(); updateCommand(0, 1); }}
-                  onMouseUp={(e) => { e.preventDefault(); updateCommand(0, 0); }}
-                  onMouseLeave={(e) => { e.preventDefault(); updateCommand(0, 0); }}
-                  onTouchStart={(e) => { e.preventDefault(); updateCommand(0, 1); }}
-                  onTouchEnd={(e) => { e.preventDefault(); updateCommand(0, 0); }}
+                  onMouseDown={(e) => { e.preventDefault(); startHoldCommand(0, 1); }}
+                  onMouseUp={(e) => { e.preventDefault(); stopHoldCommand(); }}
+                  onTouchStart={(e) => { e.preventDefault(); startHoldCommand(0, 1); }}
+                  onTouchEnd={(e) => { e.preventDefault(); stopHoldCommand(); }}
                   className={`p-2.5 border rounded-xl flex items-center justify-center space-x-1 cursor-pointer transition-all active:scale-95 ${
                     activeKeys.w ? 'bg-cyber-neonGreen border-white text-black font-bold shadow-[0_0_15px_#39ff14]' : 'border-white/15 bg-white/5 text-gray-300 hover:border-cyber-neonBlue/50'
                   }`}
-                  title="Tiến lên (Phím W / Mũi tên lên)"
+                  title="Tiến lên (Ấn giữ để chạy, nhả để dừng)"
                 >
                   <span className="font-bold">W</span>
                   <ArrowUp className="w-3.5 h-3.5" />
@@ -503,45 +545,42 @@ export const JoystickControl = ({
                 <div></div>
                 <button
                   tabIndex={-1}
-                  onMouseDown={(e) => { e.preventDefault(); updateCommand(-1, 0); }}
-                  onMouseUp={(e) => { e.preventDefault(); updateCommand(0, 0); }}
-                  onMouseLeave={(e) => { e.preventDefault(); updateCommand(0, 0); }}
-                  onTouchStart={(e) => { e.preventDefault(); updateCommand(-1, 0); }}
-                  onTouchEnd={(e) => { e.preventDefault(); updateCommand(0, 0); }}
+                  onMouseDown={(e) => { e.preventDefault(); startHoldCommand(-1, 0); }}
+                  onMouseUp={(e) => { e.preventDefault(); stopHoldCommand(); }}
+                  onTouchStart={(e) => { e.preventDefault(); startHoldCommand(-1, 0); }}
+                  onTouchEnd={(e) => { e.preventDefault(); stopHoldCommand(); }}
                   className={`p-2.5 border rounded-xl flex items-center justify-center space-x-1 cursor-pointer transition-all active:scale-95 ${
                     activeKeys.a ? 'bg-cyber-neonGreen border-white text-black font-bold shadow-[0_0_15px_#39ff14]' : 'border-white/15 bg-white/5 text-gray-300 hover:border-cyber-neonBlue/50'
                   }`}
-                  title="Xoay Trái (Phím A / Mũi tên trái)"
+                  title="Xoay Trái (Ấn giữ để quay xe, đúng hướng thì nhả)"
                 >
                   <ArrowLeft className="w-3.5 h-3.5" />
                   <span className="font-bold">A</span>
                 </button>
                 <button
                   tabIndex={-1}
-                  onMouseDown={(e) => { e.preventDefault(); updateCommand(0, -1); }}
-                  onMouseUp={(e) => { e.preventDefault(); updateCommand(0, 0); }}
-                  onMouseLeave={(e) => { e.preventDefault(); updateCommand(0, 0); }}
-                  onTouchStart={(e) => { e.preventDefault(); updateCommand(0, -1); }}
-                  onTouchEnd={(e) => { e.preventDefault(); updateCommand(0, 0); }}
+                  onMouseDown={(e) => { e.preventDefault(); startHoldCommand(0, -1); }}
+                  onMouseUp={(e) => { e.preventDefault(); stopHoldCommand(); }}
+                  onTouchStart={(e) => { e.preventDefault(); startHoldCommand(0, -1); }}
+                  onTouchEnd={(e) => { e.preventDefault(); stopHoldCommand(); }}
                   className={`p-2.5 border rounded-xl flex items-center justify-center space-x-1 cursor-pointer transition-all active:scale-95 ${
                     activeKeys.s ? 'bg-cyber-neonGreen border-white text-black font-bold shadow-[0_0_15px_#39ff14]' : 'border-white/15 bg-white/5 text-gray-300 hover:border-cyber-neonBlue/50'
                   }`}
-                  title="Lùi (Phím S / Mũi tên xuống)"
+                  title="Lùi (Ấn giữ để lùi, nhả để dừng)"
                 >
                   <span className="font-bold">S</span>
                   <ArrowDown className="w-3.5 h-3.5" />
                 </button>
                 <button
                   tabIndex={-1}
-                  onMouseDown={(e) => { e.preventDefault(); updateCommand(1, 0); }}
-                  onMouseUp={(e) => { e.preventDefault(); updateCommand(0, 0); }}
-                  onMouseLeave={(e) => { e.preventDefault(); updateCommand(0, 0); }}
-                  onTouchStart={(e) => { e.preventDefault(); updateCommand(1, 0); }}
-                  onTouchEnd={(e) => { e.preventDefault(); updateCommand(0, 0); }}
+                  onMouseDown={(e) => { e.preventDefault(); startHoldCommand(1, 0); }}
+                  onMouseUp={(e) => { e.preventDefault(); stopHoldCommand(); }}
+                  onTouchStart={(e) => { e.preventDefault(); startHoldCommand(1, 0); }}
+                  onTouchEnd={(e) => { e.preventDefault(); stopHoldCommand(); }}
                   className={`p-2.5 border rounded-xl flex items-center justify-center space-x-1 cursor-pointer transition-all active:scale-95 ${
                     activeKeys.d ? 'bg-cyber-neonGreen border-white text-black font-bold shadow-[0_0_15px_#39ff14]' : 'border-white/15 bg-white/5 text-gray-300 hover:border-cyber-neonBlue/50'
                   }`}
-                  title="Xoay Phải (Phím D / Mũi tên phải)"
+                  title="Xoay Phải (Ấn giữ để quay xe, đúng hướng thì nhả)"
                 >
                   <span className="font-bold">D</span>
                   <ArrowRight className="w-3.5 h-3.5" />

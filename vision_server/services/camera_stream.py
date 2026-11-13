@@ -77,32 +77,50 @@ class CameraStreamManager:
                         break
                     raw_buffer += chunk
 
-                    # Quét tìm điểm bắt đầu (\xff\xd8) và kết thúc (\xff\xd9) của frame JPEG
+                    # Quét tìm điểm bắt đầu (\xff\xd8) của frame JPEG
                     a = raw_buffer.find(b'\xff\xd8')
-                    b = raw_buffer.find(b'\xff\xd9')
+                    if a != -1:
+                        # Nếu đã có frame tiếp theo (next_soi), lấy EOI chuẩn xác nằm ngay trước next_soi
+                        next_soi = raw_buffer.find(b'\xff\xd8', a + 2)
+                        if next_soi != -1:
+                            b = raw_buffer.rfind(b'\xff\xd9', a, next_soi)
+                            if b != -1 and b > a:
+                                jpg_bytes = raw_buffer[a:b+2]
+                                raw_buffer = raw_buffer[next_soi:]
 
-                    if a != -1 and b != -1:
-                        if b > a:
-                            jpg_bytes = raw_buffer[a:b+2]
-                            raw_buffer = raw_buffer[b+2:]
+                                frame = cv2.imdecode(np.frombuffer(jpg_bytes, dtype=np.uint8), cv2.IMREAD_COLOR)
+                                if frame is not None:
+                                    now = time.time()
+                                    frame_counter += 1
 
-                            # Giải mã ảnh JPEG bằng OpenCV imdecode
-                            frame = cv2.imdecode(np.frombuffer(jpg_bytes, dtype=np.uint8), cv2.IMREAD_COLOR)
-                            if frame is not None:
-                                now = time.time()
-                                frame_counter += 1
+                                    if now - fps_start_time >= 1.0:
+                                        self.fps = round(frame_counter / (now - fps_start_time), 1)
+                                        frame_counter = 0
+                                        fps_start_time = now
 
-                                if now - fps_start_time >= 1.0:
-                                    self.fps = round(frame_counter / (now - fps_start_time), 1)
-                                    frame_counter = 0
-                                    fps_start_time = now
-
-                                with self._lock:
-                                    self.latest_frame = frame
-                                    self.last_frame_time = now
+                                    with self._lock:
+                                        self.latest_frame = frame
+                                        self.last_frame_time = now
                         else:
-                            # Khung hình bị lỗi, bỏ đoạn rác phía trước
-                            raw_buffer = raw_buffer[a:]
+                            # Chưa nhận đủ next_soi, tìm EOI (bỏ qua 3KB đầu để tránh nhiễu byte nội bộ)
+                            b = raw_buffer.find(b'\xff\xd9', a + 3000)
+                            if b != -1 and b > a:
+                                jpg_bytes = raw_buffer[a:b+2]
+                                raw_buffer = raw_buffer[b+2:]
+
+                                frame = cv2.imdecode(np.frombuffer(jpg_bytes, dtype=np.uint8), cv2.IMREAD_COLOR)
+                                if frame is not None:
+                                    now = time.time()
+                                    frame_counter += 1
+
+                                    if now - fps_start_time >= 1.0:
+                                        self.fps = round(frame_counter / (now - fps_start_time), 1)
+                                        frame_counter = 0
+                                        fps_start_time = now
+
+                                    with self._lock:
+                                        self.latest_frame = frame
+                                        self.last_frame_time = now
 
                     # Chống phình bộ nhớ nếu rớt mạng giữa chừng
                     if len(raw_buffer) > 2_000_000:

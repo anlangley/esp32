@@ -6,6 +6,7 @@ export interface BoundingBoxDetection {
   class_name: string;
   label: string;
   confidence: number;
+  source?: string; // 'yolo' | 'freespace' | 'flow' | 'fused (...)'
 }
 
 export interface LaneTrackingData {
@@ -23,6 +24,60 @@ export interface CollisionRiskData {
   is_emergency_stop: boolean;
   threat_object: string | null;
   threat_ratio: number;
+  ultrasonic_distance_cm?: number | null;
+  ultrasonic_emergency?: boolean;
+  fusion_mode?: string;
+  counts?: {
+    total: number;
+    yolo: number;
+    freespace: number;
+    flow: number;
+  };
+}
+
+export interface FrameQualityData {
+  brightness: number;
+  contrast: number;
+  sharpness: number;
+  is_dark: boolean;
+  is_bright: boolean;
+  is_low_contrast: boolean;
+  is_blurry: boolean;
+  enhance_steps?: string[];
+  dropped_blurry_count?: number;
+  is_dropped_blur?: boolean;
+}
+
+export interface StabilizerData {
+  dx: number;
+  dy: number;
+  dtheta: number;
+  jitter: number;
+  is_stabilized: boolean;
+}
+
+export interface FreespaceData {
+  blocked_ratio: number;
+  is_blocked: boolean;
+  sample_box?: [number, number, number, number];
+}
+
+export interface FlowData {
+  mean_magnitude: number;
+  is_approaching: boolean;
+}
+
+export interface TimingsData {
+  assess_ms?: number;
+  enhance_ms?: number;
+  stabilizer_ms?: number;
+  yolo_ms?: number;
+  lane_ms?: number;
+  collision_ms?: number;
+  freespace_ms?: number;
+  flow_ms?: number;
+  fusion_ms?: number;
+  total_ms?: number;
 }
 
 export interface VisionPayload {
@@ -34,6 +89,13 @@ export interface VisionPayload {
   detections: BoundingBoxDetection[];
   lane: LaneTrackingData;
   collision: CollisionRiskData;
+  timings_ms?: TimingsData;
+  quality?: FrameQualityData;
+  stabilizer?: StabilizerData;
+  freespace?: FreespaceData;
+  flow?: FlowData;
+  fusion_mode?: string;
+  config_hash?: string;
 }
 
 export function useVisionWebSocket(visionHost = 'localhost:8000') {
@@ -69,10 +131,15 @@ export function useVisionWebSocket(visionHost = 'localhost:8000') {
 
       ws.onmessage = (event) => {
         try {
-          const data: VisionPayload = JSON.parse(event.data);
+          let raw = event.data;
+          // Phòng ngừa NaN / Infinity trong chuỗi JSON nếu có
+          if (typeof raw === 'string' && (raw.includes(': NaN') || raw.includes(': -NaN') || raw.includes(': Infinity'))) {
+            raw = raw.replace(/:\s*-?NaN/g, ': 0.0').replace(/:\s*Infinity/g, ': 999999').replace(/:\s*-Infinity/g, ': -999999');
+          }
+          const data: VisionPayload = JSON.parse(raw);
           setVisionData(data);
-        } catch {
-          // ignore parse errors
+        } catch (err) {
+          console.error('[useVisionWebSocket] JSON parse error:', err);
         }
       };
 
@@ -117,5 +184,11 @@ export function useVisionWebSocket(visionHost = 'localhost:8000') {
     collision: visionData?.collision,
     inferenceMs: visionData?.inference_ms || 0,
     cameraFps: visionData?.camera_fps || 0,
+    timings: visionData?.timings_ms,
+    quality: visionData?.quality,
+    stabilizer: visionData?.stabilizer,
+    freespace: visionData?.freespace,
+    flow: visionData?.flow,
+    fusionMode: visionData?.fusion_mode,
   };
 }

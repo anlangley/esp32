@@ -1,7 +1,12 @@
 import cv2
 import numpy as np
-from typing import Dict, Any, Tuple, List
+from typing import Dict, Any, Tuple, List, Optional
 from config import cfg
+
+try:
+    from modules.preprocess import adaptive_lane_binarize
+except ImportError:
+    from vision_server.modules.preprocess import adaptive_lane_binarize
 
 class CVAlgorithms:
     """
@@ -28,9 +33,9 @@ class CVAlgorithms:
         gray = cv2.cvtColor(roi, cv2.COLOR_BGR2GRAY)
         blurred = cv2.GaussianBlur(gray, (5, 5), 0)
 
-        # Nhị phân hóa (Phát hiện vạch đen trên nền sáng hoặc vạch sáng trên nền tối)
-        # Sử dụng Otsu threshold
-        _, thresh = cv2.threshold(blurred, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)
+        # Nhị phân hóa (Otsu baseline hoặc Adaptive thích nghi theo cấu hình)
+        threshold_mode = getattr(cfg, 'LANE_THRESHOLD_MODE', 'otsu')
+        thresh, method_used = adaptive_lane_binarize(blurred, mode=threshold_mode, config=cfg)
 
         # Tìm các đường bao (Contours)
         contours, _ = cv2.findContours(thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
@@ -41,7 +46,8 @@ class CVAlgorithms:
                 "steering_offset": 0.0,
                 "suggested_turn": "STRAIGHT",
                 "center_x": w // 2,
-                "confidence": 0.0
+                "confidence": 0.0,
+                "method_used": method_used
             }
 
         # Lấy contour có diện tích lớn nhất (vạch line chính)
@@ -55,7 +61,8 @@ class CVAlgorithms:
                 "steering_offset": 0.0,
                 "suggested_turn": "STRAIGHT",
                 "center_x": w // 2,
-                "confidence": 0.0
+                "confidence": 0.0,
+                "method_used": method_used
             }
 
         # Tính tâm đường (Centroid / Moments)
@@ -85,7 +92,8 @@ class CVAlgorithms:
             "suggested_turn": suggested_turn,
             "center_x": cx,
             "center_y": cy,
-            "confidence": min(round(area / 15000.0, 2), 1.0)
+            "confidence": min(round(area / 15000.0, 2), 1.0),
+            "method_used": method_used
         }
 
     @staticmethod

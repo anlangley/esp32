@@ -46,3 +46,22 @@ lerna-debug.log*
 # Cache & Temporary files
 .eslintcache
 .oxlintrc.cache
+*.tsbuildinfo
+
+# Python & AI Vision
+__pycache__/
+**/__pycache__/
+*.py[cod]
+*$py.class
+*.pyd
+.Python
+env/
+venv/
+.venv/
+ENV/
+.pytest_cache/
+.coverage
+htmlcov/
+runs/
+**/runs/
+*.onnx

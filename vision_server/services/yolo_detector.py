@@ -44,6 +44,17 @@ COCO_VIETNAMESE = {
     "scissors": "Kéo",
 }
 
+# Danh sách các class ngoài trời không phù hợp với xe IoT trong nhà, dễ bị ảo giác khi conf thấp
+INDOOR_IGNORED_CLASSES = {
+    "parking meter",
+    "traffic light",
+    "fire hydrant",
+    "stop sign",
+    "airplane",
+    "boat",
+    "train",
+}
+
 class YOLODetector:
     """
     Bộ nhận diện vật thể YOLOv8 chạy trên GPU RTX 3050 (CUDA)
@@ -110,6 +121,11 @@ class YOLODetector:
                     conf = float(box.conf[0])
                     cls_id = int(box.cls[0])
                     class_name = self.model.names[cls_id]
+
+                    # Bỏ qua các class ngoài trời không phù hợp để tránh nhận nhầm chân bàn/tủ
+                    if class_name in INDOOR_IGNORED_CLASSES:
+                        continue
+
                     label_vi = COCO_VIETNAMESE.get(class_name, class_name)
 
                     # Chuyển đổi sang format: [x, y, width, height]

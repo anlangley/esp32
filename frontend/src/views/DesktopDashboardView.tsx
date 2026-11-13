@@ -79,7 +79,7 @@ export const DesktopDashboardView = ({
   
   // Computed values: Bất kỳ xe nào không phải Demo CAR-A1B2C3 đều là xe phần cứng thật
   const isRealCar = !!activeVehicle && activeVehicle.vehicleCode.toUpperCase() !== 'CAR-A1B2C3';
-  const isCollisionWarning = isOnline && telemetry.distance <= 30;
+  const isCollisionWarning = isOnline && telemetry.distance >= 2 && telemetry.distance <= 30;
   const [isVehicleModalOpen, setIsVehicleModalOpen] = useState(false);
 
   return (
@@ -242,6 +242,8 @@ export const DesktopDashboardView = ({
             onLog={addLog}
             isDemoMode={isDemoMode}
             setIsDemoMode={setIsDemoMode}
+            externalFps={telemetry.cameraFps}
+            externalRssi={telemetry.cameraRssi}
           />
 
           {/* Unified Controls HUD Component (Joystick, WASD, S.BUS RC) */}
